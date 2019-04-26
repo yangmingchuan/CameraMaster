@@ -97,7 +97,6 @@ import static camera.cn.cameramaster.util.AppConstant.SHOW_ISO;
 import static camera.cn.cameramaster.util.AppConstant.SHOW_SENSE;
 import static camera.cn.cameramaster.util.AppConstant.SHOW_ZOOM;
 
-
 /**
  * google 拍照 demo
  *
