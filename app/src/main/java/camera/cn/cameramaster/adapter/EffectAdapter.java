@@ -29,9 +29,9 @@ public class EffectAdapter extends RecyclerView.Adapter<EffectAdapter.EffectView
     private String[] effectArr = {"aqua", "blackboard", "monocolor", "negative", "posterization", "sepia"
             , "solarisation", "whiteboard", "off"};
 
-    private String[] senseArr = {"DISABLED", "FACE_PRIORITY", "ACTION", "PORTRAIT", "LANDSCAPE", "NIGHT"
-            , "NIGHT_PORTRAIT", "THEATRE", "BEACH", "SNOW", "SUNSET", "STEADYPHOTO", "FIREWORKS",
-            "SPORTS", "PARTY", "CANDLELIGHT", "BARCODE"};
+//    private String[] senseArr = {"DISABLED", "FACE_PRIORITY", "ACTION", "PORTRAIT", "LANDSCAPE", "NIGHT"
+//            , "NIGHT_PORTRAIT", "THEATRE", "BEACH", "SNOW", "SUNSET", "STEADYPHOTO", "FIREWORKS",
+//            "SPORTS", "PARTY", "CANDLELIGHT", "BARCODE"};
 
     public EffectAdapter(Context mContext) {
         this.mContext = mContext;

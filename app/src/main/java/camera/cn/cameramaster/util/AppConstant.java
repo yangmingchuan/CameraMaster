@@ -12,6 +12,14 @@ package camera.cn.cameramaster.util;
 
 public class AppConstant {
 
+    /**
+     * 感觉数组
+     */
+    private String[] senseArr = {"DISABLED", "FACE_PRIORITY", "ACTION", "PORTRAIT", "LANDSCAPE", "NIGHT"
+            , "NIGHT_PORTRAIT", "THEATRE", "BEACH", "SNOW", "SUNSET", "STEADYPHOTO", "FIREWORKS",
+            "SPORTS", "PARTY", "CANDLELIGHT", "BARCODE"};
+
+
     public interface KEY{
         String IMG_PATH = "IMG_PATH";
         String VIDEO_PATH = "VIDEO_PATH";

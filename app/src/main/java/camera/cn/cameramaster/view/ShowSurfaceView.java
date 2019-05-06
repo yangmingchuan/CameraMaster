@@ -19,9 +19,13 @@ import android.view.SurfaceView;
 
 public class ShowSurfaceView extends SurfaceView implements SurfaceHolder.Callback, Runnable {
     private SurfaceHolder mSurfaceHolder;
-    //绘图的Canvas
+    /**
+     * 绘图的Canvas
+     */
     private Canvas mCanvas;
-    //子线程标志位
+    /**
+     * 子线程标志位
+     */
     private boolean mIsDrawing;
     private Bitmap bitmap;
     private Paint mPaint;

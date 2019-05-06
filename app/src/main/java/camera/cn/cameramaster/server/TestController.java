@@ -29,7 +29,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import camera.cn.cameramaster.eventbus.AnyEventType;
 import camera.cn.cameramaster.server.model.UserInfo;
 import camera.cn.cameramaster.server.util.FileUtils;
 

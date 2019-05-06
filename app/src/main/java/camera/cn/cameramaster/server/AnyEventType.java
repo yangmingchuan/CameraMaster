@@ -1,4 +1,4 @@
-package camera.cn.cameramaster.eventbus;
+package camera.cn.cameramaster.server;
 
 /**
  * event bus 消息类

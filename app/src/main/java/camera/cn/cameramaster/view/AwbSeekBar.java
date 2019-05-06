@@ -1,4 +1,4 @@
-package camera.cn.cameramaster.view.camera;
+package camera.cn.cameramaster.view;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -8,7 +8,8 @@ import android.util.AttributeSet;
 import android.widget.SeekBar;
 
 /**
- * 自定义 7种状态选择 seekbar
+ * 自定义 8种白平衡状态 选择 seekBar
+ *
  * @author ymc
  */
 

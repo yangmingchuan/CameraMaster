@@ -1,11 +1,14 @@
 package camera.cn.cameramaster.view;
 
 import android.content.Context;
+import android.graphics.Matrix;
 import android.util.AttributeSet;
 import android.view.TextureView;
 
 /**
- * @packageName: cn.tongue.tonguecamera.view
+ * 自定义 TextureView
+ * 重新计算预览宽高
+ *
  * @fileName: AutoFitTextureView
  * @date: 2019/1/28  17:00
  * @author: ymc
@@ -30,9 +33,8 @@ public class AutoFitTextureView extends TextureView {
     }
 
     /**
-     * Sets the aspect ratio for this view. The size of the view will be measured based on the ratio
-     * calculated from the parameters. Note that the actual sizes of parameters don't matter, that
-     * is, calling setAspectRatio(2, 3) and setAspectRatio(4, 6) make the same result.
+     * 设置此视图的纵横比。将根据比率测量视图的大小 根据参数计算。注意，参数的实际大小无关紧要
+     * 调用setAspectRatio（2,3）和setAspectRatio（4,6）会产生相同的结果。
      *
      * @param width  Relative horizontal size
      * @param height Relative vertical size
@@ -44,6 +46,36 @@ public class AutoFitTextureView extends TextureView {
         mRatioWidth = width;
         mRatioHeight = height;
         requestLayout();
+    }
+
+    /**
+     * 视频宽度适配
+     *
+     * @param width 宽度
+     * @param height 长度
+     */
+    public void setVideoAspectRatio(int width, int height) {
+        if (width < 0 || height < 0) {
+            throw new IllegalArgumentException("Size cannot be negative.");
+        }
+        mRatioWidth = width;
+        mRatioHeight = height;
+        //算出相机的缩放比例
+        float mRatio = (float) mRatioWidth / (float) mRatioHeight;
+        if (mRatio < 1.0) {
+            setAspectRatio(width, height);
+        } else {
+            float h = getWidth() / mRatio;
+            float scale;
+            if (h > getHeight()){
+                scale = (float) getHeight() / h;
+            }else{
+                scale = h / (float) getHeight();
+            }
+            Matrix matrix = new Matrix();
+            matrix.postScale(1, scale, getWidth() / 2, getHeight() / 2);
+            setTransform(matrix);
+        }
     }
 
     @Override

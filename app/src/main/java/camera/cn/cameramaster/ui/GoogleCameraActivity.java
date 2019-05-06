@@ -24,6 +24,7 @@ import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
+import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
@@ -80,16 +81,17 @@ import camera.cn.cameramaster.R;
 import camera.cn.cameramaster.adapter.EffectAdapter;
 import camera.cn.cameramaster.adapter.SenseAdapter;
 import camera.cn.cameramaster.base.BaseActivity;
-import camera.cn.cameramaster.eventbus.AnyEventType;
+import camera.cn.cameramaster.server.AnyEventType;
 import camera.cn.cameramaster.listener.AwbSeekBarChangeListener;
 import camera.cn.cameramaster.server.ServerManager;
-import camera.cn.cameramaster.server.TestController;
 import camera.cn.cameramaster.util.CompareSizesByArea;
+import camera.cn.cameramaster.util.Utils;
 import camera.cn.cameramaster.view.AutoFitTextureView;
 import camera.cn.cameramaster.view.ShowSurfaceView;
-import camera.cn.cameramaster.view.camera.AnimationTextView;
-import camera.cn.cameramaster.view.camera.AwbSeekBar;
+import camera.cn.cameramaster.view.AnimationTextView;
+import camera.cn.cameramaster.view.AwbSeekBar;
 
+import static android.provider.MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO;
 import static camera.cn.cameramaster.util.AppConstant.SHOW_AE;
 import static camera.cn.cameramaster.util.AppConstant.SHOW_AWB;
 import static camera.cn.cameramaster.util.AppConstant.SHOW_EFFECT;
@@ -160,6 +162,8 @@ public class GoogleCameraActivity extends BaseActivity {
      */
     @BindView(R.id.homecamera_bottom_relative2)
     RelativeLayout mLayoutCapture;
+    @BindView(R.id.img_camera_g)
+    ImageView ivCamereVideo;
     @BindView(R.id.switch_ae)
     Switch switchAe;
     @BindView(R.id.sb_ae)
@@ -249,7 +253,10 @@ public class GoogleCameraActivity extends BaseActivity {
      */
     private CaptureRequest.Builder mPreviewRequestBuilder;
     private CaptureRequest mPreviewRequest;
-
+    /**
+     * 视频对象
+     */
+    private MediaRecorder mMediaRecorder;
     /**
      * 当前相机状态.
      */
@@ -277,6 +284,13 @@ public class GoogleCameraActivity extends BaseActivity {
     private ImageReader mImageReader;
 
     private File mFile;
+
+    private File mVideoPath;
+
+    /**
+     * true ： 正在录制  /  false ：反之
+     */
+    private boolean hasVideoOn = false;
 
     /**
      * 闪光灯类型 0 ：关闭   1： 打开   2：自动
@@ -326,10 +340,6 @@ public class GoogleCameraActivity extends BaseActivity {
      */
     private ServerManager mServerManager;
     /**
-     * 控制器
-     */
-    private TestController controller;
-    /**
      * 是否显示Awb的按钮
      */
     private boolean showAwbFlag = false;
@@ -376,12 +386,22 @@ public class GoogleCameraActivity extends BaseActivity {
      * 图片保存名称
      */
     private String fileName;
+    /**
+     * 静态大小
+     */
+    private Size largest;
+    private Surface surface;
+    /**
+     * 是否正在录制中
+     */
+    private boolean isRecording = false;
 
     @Override
     protected int getLayoutId() {
         return R.layout.activity_google_camera;
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void initView() {
         mShowAction = new TranslateAnimation(Animation.RELATIVE_TO_SELF,
@@ -399,7 +419,7 @@ public class GoogleCameraActivity extends BaseActivity {
         mAlphaInAnimation.setDuration(500);
         mAlphaOutAnimation = new AlphaAnimation(1.0f, 0.0f);
         mAlphaOutAnimation.setDuration(500);
-
+        mMediaRecorder = new MediaRecorder();
         txtWindowTxt.setmAnimation(mScaleWindowAnimation);
         sbAe.setOnSeekBarChangeListener(new CameraSeekBarListener());
         sbZoom.setOnSeekBarChangeListener(new CameraSeekBarListener());
@@ -444,7 +464,6 @@ public class GoogleCameraActivity extends BaseActivity {
         mServerManager.register();
         mServerManager.startServer();
     }
-
 
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -722,11 +741,11 @@ public class GoogleCameraActivity extends BaseActivity {
                 int[] aa = characteristics.get(CameraCharacteristics.CONTROL_AWB_AVAILABLE_MODES);
                 // 最大白平衡数
                 Integer maxAwb = characteristics.get(CameraCharacteristics.CONTROL_MAX_REGIONS_AWB);
-
                 //获取曝光时间
                 etr = characteristics.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
+
                 // 静态图像捕获，选择最大可用大小。
-                Size largest = Collections.max(
+                largest = Collections.max(
                         Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)),
                         new CompareSizesByArea());
                 // w: 720  h :960
@@ -891,7 +910,7 @@ public class GoogleCameraActivity extends BaseActivity {
             SurfaceTexture texture = mTextureView.getSurfaceTexture();
             //将默认缓冲区的大小配置为相机预览的大小。
             texture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
-            Surface surface = new Surface(texture);
+            surface = new Surface(texture);
             //使用Surface设置CaptureRequest.Builder
             mPreviewRequestBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             mPreviewRequestBuilder.addTarget(surface);
@@ -926,7 +945,6 @@ public class GoogleCameraActivity extends BaseActivity {
                                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, 10);
                                 // 设置帧 持续时长
                                 mPreviewRequestBuilder.set(CaptureRequest.SENSOR_FRAME_DURATION, 1000L);
-                                //需要预览的话改成这个并且添加到下面的createCaptureSession里
                                 mPreviewRequest = mPreviewRequestBuilder.build();
                                 mCaptureSession.setRepeatingRequest(mPreviewRequest,
                                         mCaptureCallback, mBackgroundHandler);
@@ -1088,7 +1106,7 @@ public class GoogleCameraActivity extends BaseActivity {
     }
 
     @SuppressLint("MissingPermission")
-    @OnClick({R.id.img_camera_g, R.id.iv_back_g, R.id.iv_flash, R.id.iv_ae, R.id.iv_awb, R.id.iv_iso,
+    @OnClick({R.id.iv_back_g, R.id.iv_flash, R.id.iv_ae, R.id.iv_awb, R.id.iv_iso,R.id.img_camera_g,
             R.id.iv_zoom, R.id.iv_change_camera, R.id.iv_effect, R.id.iv_sense, R.id.iv_images})
     public void onClick(View view) {
         switch (view.getId()) {
@@ -1476,6 +1494,99 @@ public class GoogleCameraActivity extends BaseActivity {
         });
     }
 
+    /**
+     * 录制预览
+     */
+    private void startRecordingVideo() {
+        if (null == mCameraDevice || !mTextureView.isAvailable() || null == mPreviewSize) {
+            return;
+        }
+        try {
+            if (null != mCaptureSession) {
+                mCaptureSession.close();
+                mCaptureSession = null;
+            }
+            setUpMediaRecorder();
+            SurfaceTexture mtexture = mTextureView.getSurfaceTexture();
+            assert mtexture != null;
+            mtexture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
+            mPreviewRequestBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
+            List<Surface> surfaces = new ArrayList<>();
+
+            // Set up Surface for the camera preview
+            Surface previewSurface = new Surface(mtexture);
+            surfaces.add(previewSurface);
+            mPreviewRequestBuilder.addTarget(previewSurface);
+
+            // Set up Surface for the MediaRecorder
+            Surface recorderSurface = mMediaRecorder.getSurface();
+            surfaces.add(recorderSurface);
+            mPreviewRequestBuilder.addTarget(recorderSurface);
+
+            mCameraDevice.createCaptureSession(surfaces, new CameraCaptureSession.StateCallback() {
+
+                @Override
+                public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
+                    //设置反复捕获数据的请求，这样预览界面就会一直有数据显示
+                    mCaptureSession = cameraCaptureSession;
+                    updatePreview();
+                    Log.e(TAG, "onConfigured: " + Thread.currentThread().getName());
+                    // Start recording
+                    mMediaRecorder.start();
+                }
+
+                @Override
+                public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
+                }
+            }, mBackgroundHandler);
+        } catch (CameraAccessException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    /**
+     * 录制结束
+     */
+    private void stopRecordingVideo() {
+        // Stop recording
+        mMediaRecorder.stop();
+        mMediaRecorder.reset();
+        Toast.makeText(this, "Video saved: " + mVideoPath.getAbsolutePath(),
+                Toast.LENGTH_SHORT).show();
+        createCameraPreviewSession();
+    }
+
+    /**
+     * 设置 MediaRecorder
+     *
+     * @throws IOException
+     */
+    private void setUpMediaRecorder() throws IOException {
+        mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+        mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
+        mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+        mVideoPath = Utils.getOutputMediaFile(this,MEDIA_TYPE_VIDEO);
+        mMediaRecorder.setOutputFile(mVideoPath.getAbsolutePath());
+        mMediaRecorder.setVideoEncodingBitRate(10000000);
+        mMediaRecorder.setVideoFrameRate(30);
+        mMediaRecorder.setVideoSize(largest.getWidth(), largest.getHeight());
+        mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
+        mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+        int rotation = getWindowManager().getDefaultDisplay().getRotation();
+        switch (mSensorOrientation) {
+            case 90:
+                mMediaRecorder.setOrientationHint(ORIENTATIONS.get(rotation));
+                break;
+            case 270:
+                mMediaRecorder.setOrientationHint(ORIENTATIONS.get(rotation));
+                break;
+            default:
+                break;
+        }
+        mMediaRecorder.prepare();
+    }
+
 
     /**
      * Start notify.
@@ -1535,11 +1646,11 @@ public class GoogleCameraActivity extends BaseActivity {
 
     private static final String LOGIN_ATTRIBUTE = "USER.LOGIN.SIGN";
 
-    public CaptureRequest.Builder getBuilder(){
+    public CaptureRequest.Builder getBuilder() {
         return mPreviewRequestBuilder;
     }
 
-    public CameraCaptureSession getSession(){
+    public CameraCaptureSession getSession() {
         return mCaptureSession;
     }
 

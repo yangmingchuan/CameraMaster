@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Bitmap处理工具
@@ -74,6 +75,102 @@ public class BitmapUtils {
                 break;
         }
         return size;
+    }
+
+    /**
+     * 通过资源id转化成Bitmap
+     *
+     * @param context 对象
+     * @param resId   资源id
+     * @return bitmap
+     */
+    public static Bitmap ReadBitmapById(Context context, int resId) {
+        BitmapFactory.Options opt = new BitmapFactory.Options();
+        opt.inPreferredConfig = Bitmap.Config.RGB_565;
+        opt.inPurgeable = true;
+        opt.inInputShareable = true;
+        InputStream is = context.getResources().openRawResource(resId);
+        return BitmapFactory.decodeStream(is, null, opt);
+    }
+
+
+    /**
+     * Bitmap --> byte[]
+     *
+     * @param bmp Bitmap
+     * @return byte[]
+     */
+    public static byte[] readBitmap(Bitmap bmp) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bmp.compress(Bitmap.CompressFormat.JPEG, 60, baos);
+        try {
+            baos.flush();
+            baos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return baos.toByteArray();
+    }
+
+
+    /**
+     * 旋转图片
+     *
+     * @param angle
+     * @param bitmap
+     * @return
+     */
+    public static Bitmap rotaingImageView(int angle, Bitmap bitmap) {
+        // 旋转图片 动作
+        Matrix matrix = new Matrix();
+        matrix.postRotate(angle);
+
+        // 创建新的图片
+        Bitmap resizedBitmap = Bitmap.createBitmap(bitmap, 0, 0,
+                bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+        if (resizedBitmap != bitmap && bitmap != null && !bitmap.isRecycled()) {
+            bitmap.recycle();
+            bitmap = null;
+        }
+
+        return resizedBitmap;
+    }
+
+    /**
+     * 读取图片旋转的角度
+     *
+     * @param filename
+     * @return
+     */
+    public static void setPictureDegree(String filename, int degree) {
+        try {
+            if (degree == 0) {
+                return;
+            }
+
+            int rotate = android.support.media.ExifInterface.ORIENTATION_UNDEFINED;
+            switch (degree) {
+                case 90:
+                    rotate = android.support.media.ExifInterface.ORIENTATION_ROTATE_90;
+                    break;
+                case 180:
+                    rotate = android.support.media.ExifInterface.ORIENTATION_ROTATE_180;
+                    break;
+                case 270:
+                    rotate = android.support.media.ExifInterface.ORIENTATION_ROTATE_270;
+                    break;
+                default:
+                    break;
+            }
+
+            android.support.media.ExifInterface exifInterface = new android.support.media.ExifInterface(filename);
+            exifInterface.setAttribute(android.support.media.ExifInterface.TAG_ORIENTATION,
+                    String.valueOf(rotate));
+            exifInterface.saveAttributes();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -819,22 +916,6 @@ public class BitmapUtils {
         return bitmap;
     }
 
-
-    /**
-     * 把被系统旋转了的图片，转正
-     *
-     * @param angle 旋转角度
-     * @return bitmap 图片
-     */
-    public static Bitmap rotaingImageView(int angle, Bitmap bitmap) {
-        //旋转图片 动作
-        Matrix matrix = new Matrix();
-        matrix.postRotate(angle);
-        // 创建新的图片
-        Bitmap resizedBitmap = Bitmap.createBitmap(bitmap, 0, 0,
-                bitmap.getWidth(), bitmap.getHeight(), matrix, true);
-        return resizedBitmap;
-    }
 
     /**
      * <<<<<<< HEAD

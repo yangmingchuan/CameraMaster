@@ -3,13 +3,21 @@ package camera.cn.cameramaster.util;
 import android.content.Context;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
+import android.os.Environment;
+import android.util.Log;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.microedition.khronos.opengles.GL10;
+
+import static android.provider.MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE;
+import static android.provider.MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO;
 
 /**
  * opengles utils
@@ -19,6 +27,8 @@ import javax.microedition.khronos.opengles.GL10;
  */
 
 public class Utils {
+
+    private static final String TAG = "Utils";
 
     /**
      * 创建 oes id
@@ -78,5 +88,46 @@ public class Utils {
             }
         }
         return builder.toString();
+    }
+
+
+    /**
+     * 获取输出照片视频路径
+     * @param mContext 上下文
+     * @param mediaType 拍照视频类型
+     * @return 文件地址
+     */
+    public static File getOutputMediaFile(Context mContext, int mediaType) {
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String fileName = null;
+        File storageDir = null;
+        if (mediaType == MEDIA_TYPE_IMAGE) {
+            fileName = "JPEG_" + timeStamp + "_";
+            storageDir = mContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        } else if (mediaType == MEDIA_TYPE_VIDEO) {
+            fileName = "MP4_" + timeStamp + "_";
+            storageDir = mContext.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
+        }
+
+        // Create the storage directory if it does not exist
+        if (!storageDir.exists()) {
+            if (!storageDir.mkdirs()) {
+                Log.d(TAG, "failed to create directory");
+                return null;
+            }
+        }
+
+        File file = null;
+        try {
+            file = File.createTempFile(
+                    fileName,  /* prefix */
+                    (mediaType == MEDIA_TYPE_IMAGE) ? ".jpg" : ".mp4",         /* suffix */
+                    storageDir      /* directory */
+            );
+            Log.d(TAG, "getOutputMediaFile: absolutePath==" + file.getAbsolutePath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return file;
     }
 }

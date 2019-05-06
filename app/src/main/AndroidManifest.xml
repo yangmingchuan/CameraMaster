@@ -7,16 +7,25 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
+
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.FLASHLIGHT" />
+
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera.autofocus" />
+
     <application
+        android:name=".base.App"
         android:allowBackup="true"
+        android:hardwareAccelerated="true"
         android:icon="@drawable/ic_launcher_camera"
         android:label="@string/app_name"
+        android:largeHeap="true"
         android:roundIcon="@drawable/ic_launcher_camera"
         android:supportsRtl="true"
-        android:largeHeap="true"
-        android:hardwareAccelerated="true"
         android:theme="@style/AppTheme">
 
+        <!-- 首页 -->
         <activity android:name=".ui.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -28,7 +37,11 @@
                 <category android:name="android.intent.category.MONKEY" />
             </intent-filter>
         </activity>
+
+        <!-- 5.0- 拍照界面 -->
         <activity android:name=".ui.CameraActivity" />
+
+        <!-- 显示图像界面 -->
         <activity android:name=".ui.ShowPicActivity" />
 
         <!-- 开机广播接受者 -->
@@ -41,14 +54,19 @@
         </receiver>
 
         <activity android:name=".ui.Camera2Activity" />
-        <activity android:name=".ui.GoogleCameraActivity"></activity>
-        <activity android:name=".ui.CameraSurfaceViewActivity"></activity>
-        <activity android:name=".ui.look.LookCameraActivity"></activity>
+
+
+        <activity android:name=".ui.GoogleCameraActivity">
+
+        </activity>
+        <activity android:name=".ui.CameraSurfaceViewActivity">
+
+        </activity>
 
 
         <service
             android:name=".server.CoreService"
-            android:exported="false"/>
+            android:exported="false" />
     </application>
 
 </manifest>

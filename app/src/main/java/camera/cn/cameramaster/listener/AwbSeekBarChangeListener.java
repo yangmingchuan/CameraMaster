@@ -16,7 +16,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import camera.cn.cameramaster.R;
-import camera.cn.cameramaster.view.camera.AwbSeekBar;
+import camera.cn.cameramaster.view.AwbSeekBar;
 
 
 /**

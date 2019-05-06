@@ -1,10 +1,12 @@
-package camera.cn.cameramaster.view.camera;
+package camera.cn.cameramaster.view;
 
 import android.os.Handler;
 import android.os.Message;
 
 /**
- * Created by yuyidong on 14-12-19.
+ * 睡眠线程
+ *
+ * @author ymc
  */
 public class SleepThread implements Runnable {
     private Handler mMainHandler;

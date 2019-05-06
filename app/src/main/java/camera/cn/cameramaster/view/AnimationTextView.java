@@ -1,4 +1,4 @@
-package camera.cn.cameramaster.view.camera;
+package camera.cn.cameramaster.view;
 
 import android.annotation.SuppressLint;
 import android.content.Context;

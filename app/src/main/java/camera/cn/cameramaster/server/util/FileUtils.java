@@ -24,7 +24,7 @@ import com.yanzhenjie.andserver.util.StringUtils;
 import java.io.File;
 import java.util.UUID;
 
-import camera.cn.cameramaster.App;
+import camera.cn.cameramaster.base.App;
 
 
 /**

@@ -57,8 +57,8 @@
 
             <ImageView
                 android:id="@+id/img_camera_g"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
                 android:scaleType="centerInside"
                 android:layout_marginBottom="20dp"
                 android:layout_centerInParent="true"
@@ -68,7 +68,6 @@
                 android:id="@+id/iv_images"
                 android:layout_width="40dp"
                 android:layout_height="30dp"
-                android:visibility="invisible"
                 android:layout_alignParentEnd="true"
                 android:layout_marginEnd="20dp"
                 android:layout_centerVertical="true"
@@ -191,7 +190,7 @@
                     android:src="@mipmap/ic_camera_wb_warm_fluorescent"/>
             </LinearLayout>
 
-            <camera.cn.cameramaster.view.camera.AwbSeekBar
+            <camera.cn.cameramaster.view.AwbSeekBar
                 android:id="@+id/sb_awb"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -348,7 +347,7 @@
 
     </LinearLayout>
 
-    <camera.cn.cameramaster.view.camera.AnimationTextView
+    <camera.cn.cameramaster.view.AnimationTextView
         android:id="@+id/txt_window_txt"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

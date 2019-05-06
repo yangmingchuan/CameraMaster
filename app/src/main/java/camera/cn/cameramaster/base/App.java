@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package camera.cn.cameramaster;
+package camera.cn.cameramaster.base;
 
 import android.app.Application;
 import android.content.Context;

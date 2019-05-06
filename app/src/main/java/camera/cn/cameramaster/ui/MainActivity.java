@@ -129,7 +129,8 @@ public class MainActivity extends BaseActivity {
     private void requestPermission() {
         AndPermission.with(this)
                 .permission(Manifest.permission.CAMERA,
-                        Manifest.permission.READ_EXTERNAL_STORAGE)
+                        Manifest.permission.READ_EXTERNAL_STORAGE,
+                        Manifest.permission.RECORD_AUDIO)
                 .rationale(new Rationale() {
                     @Override
                     public void showRationale(Context context, List<String> permissions, RequestExecutor executor) {
