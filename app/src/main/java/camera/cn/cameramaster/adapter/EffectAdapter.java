@@ -26,15 +26,11 @@ import camera.cn.cameramaster.R;
 public class EffectAdapter extends RecyclerView.Adapter<EffectAdapter.EffectViewHolder> {
     private LayoutInflater mLayoutInflater;
     private Context mContext;
-    private String[] effectArr = {"aqua", "blackboard", "monocolor", "negative", "posterization", "sepia"
-            , "solarisation", "whiteboard", "off"};
+    private String[] effectArr;
 
-//    private String[] senseArr = {"DISABLED", "FACE_PRIORITY", "ACTION", "PORTRAIT", "LANDSCAPE", "NIGHT"
-//            , "NIGHT_PORTRAIT", "THEATRE", "BEACH", "SNOW", "SUNSET", "STEADYPHOTO", "FIREWORKS",
-//            "SPORTS", "PARTY", "CANDLELIGHT", "BARCODE"};
-
-    public EffectAdapter(Context mContext) {
+    public EffectAdapter(Context mContext,String[] arr) {
         this.mContext = mContext;
+        this.effectArr = arr;
         mLayoutInflater = LayoutInflater.from(mContext);
     }
 

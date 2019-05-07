@@ -13,12 +13,79 @@ package camera.cn.cameramaster.util;
 public class AppConstant {
 
     /**
+     * 摄像头模式
+     */
+    public final static int CAMERA_MODE = 0;
+    /**
+     * 视频播放器模式
+     */
+    public final static int VIDEO_MODE = 1;
+
+    /**
+     * 视频最长的时长是15s
+     */
+    private final static int VIDEO_MAX_TIME = 15;
+
+    /**
+     * 视频播放模式
+     */
+    public final static int VIDEO_PLAY_MODE = 0;
+
+    /**
+     * 视频录像模式
+     */
+    public final static int VIDEO_RECORD_MODE = 1;
+
+    /**
+     * 拍照模式
+     */
+    public final static int VIDEO_TAKE_PHOTO = 2;
+
+    /**
+     * 当前面板是预览状态
+     */
+    public final static int TEXTURE_PREVIEW_STATE = 0;
+
+    /**
+     * 当前面板是录像状态
+     */
+    public final static int TEXTURE_RECORD_STATE = 1;
+
+    /**
+     * 当前面板是图片状态
+     */
+    public final static int TEXTURE_PHOTO_STATE = 2;
+
+    /**
+     * 当前面板是视频播放状态
+     */
+
+    public final static int TEXTURE_PLAY_STATE = 3;
+
+    /**
+     * 当前是摄像头模式还是视频播放模式
+     */
+    public int MODE;
+
+    /**
+     * 当前的模式，默认为拍照模式
+     */
+    public int NOW_MODE = VIDEO_TAKE_PHOTO;
+
+    /**
+     * 当前的显示面板状态
+     */
+    public int TEXTURE_STATE = TEXTURE_PREVIEW_STATE;
+
+    /**
      * 感觉数组
      */
-    private String[] senseArr = {"DISABLED", "FACE_PRIORITY", "ACTION", "PORTRAIT", "LANDSCAPE", "NIGHT"
+    public static String[] senseArr = {"DISABLED", "FACE_PRIORITY", "ACTION", "PORTRAIT", "LANDSCAPE", "NIGHT"
             , "NIGHT_PORTRAIT", "THEATRE", "BEACH", "SNOW", "SUNSET", "STEADYPHOTO", "FIREWORKS",
             "SPORTS", "PARTY", "CANDLELIGHT", "BARCODE"};
 
+    public static String[] effectArr = {"aqua", "blackboard", "monocolor", "negative", "posterization", "sepia"
+            , "solarisation", "whiteboard", "off"};
 
     public interface KEY{
         String IMG_PATH = "IMG_PATH";

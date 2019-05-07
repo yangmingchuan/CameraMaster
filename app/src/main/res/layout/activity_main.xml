@@ -9,8 +9,7 @@
         android:id="@+id/btn_camera"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:visibility="invisible"
-        android:text="camera1"
+        android:text="camera 1"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -20,9 +19,19 @@
         android:id="@+id/btn_camera2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Googlecamera2"
+        android:text="camera 2"
         android:layout_marginTop="20dp"
         app:layout_constraintTop_toBottomOf="@+id/btn_camera"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"/>
+
+    <Button
+        android:id="@+id/btn_camera2_video"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="GL camera 2 video"
+        android:layout_marginTop="20dp"
+        app:layout_constraintTop_toBottomOf="@+id/btn_camera2"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"/>
 
@@ -30,9 +39,9 @@
         android:id="@+id/btn_filter_camera2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="GLcamera2"
+        android:text="GL camera 2"
         android:layout_marginTop="20dp"
-        app:layout_constraintTop_toBottomOf="@+id/btn_camera2"
+        app:layout_constraintTop_toBottomOf="@+id/btn_camera2_video"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"/>
 

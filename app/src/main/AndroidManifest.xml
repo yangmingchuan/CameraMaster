@@ -6,8 +6,6 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-
-
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.FLASHLIGHT" />
 
@@ -54,19 +52,14 @@
         </receiver>
 
         <activity android:name=".ui.Camera2Activity" />
-
-
-        <activity android:name=".ui.GoogleCameraActivity">
-
-        </activity>
-        <activity android:name=".ui.CameraSurfaceViewActivity">
-
-        </activity>
-
+        <activity android:name=".ui.GoogleCameraActivity"></activity>
+        <activity android:name=".ui.CameraSurfaceViewActivity"></activity>
 
         <service
             android:name=".server.CoreService"
             android:exported="false" />
+
+        <activity android:name=".ui.CameraVideoActivity"></activity>
     </application>
 
 </manifest>

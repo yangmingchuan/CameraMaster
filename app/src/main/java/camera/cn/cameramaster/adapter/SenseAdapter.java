@@ -27,12 +27,11 @@ public class SenseAdapter extends RecyclerView.Adapter<SenseAdapter.EffectViewHo
     private LayoutInflater mLayoutInflater;
     private Context mContext;
 
-    private String[] senseArr = {"DISABLED", "FACE_PRIORITY", "ACTION", "PORTRAIT", "LANDSCAPE", "NIGHT"
-            , "NIGHT_PORTRAIT", "THEATRE", "BEACH", "SNOW", "SUNSET", "STEADYPHOTO", "FIREWORKS",
-            "SPORTS", "PARTY", "CANDLELIGHT", "BARCODE"};
+    private String[] senseArr;
 
-    public SenseAdapter(Context mContext) {
+    public SenseAdapter(Context mContext,String[] arr) {
         this.mContext = mContext;
+        this.senseArr = arr;
         mLayoutInflater = LayoutInflater.from(mContext);
     }
 

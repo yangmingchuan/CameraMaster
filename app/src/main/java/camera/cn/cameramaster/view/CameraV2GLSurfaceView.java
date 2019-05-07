@@ -3,7 +3,7 @@ package camera.cn.cameramaster.view;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
 
-import camera.cn.cameramaster.render.CameraV2Renderer;
+import camera.cn.cameramaster.util.render.CameraV2Renderer;
 import camera.cn.cameramaster.util.CameraV2;
 
 

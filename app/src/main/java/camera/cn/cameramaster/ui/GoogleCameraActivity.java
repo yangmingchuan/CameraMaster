@@ -84,6 +84,7 @@ import camera.cn.cameramaster.base.BaseActivity;
 import camera.cn.cameramaster.server.AnyEventType;
 import camera.cn.cameramaster.listener.AwbSeekBarChangeListener;
 import camera.cn.cameramaster.server.ServerManager;
+import camera.cn.cameramaster.util.AppConstant;
 import camera.cn.cameramaster.util.CompareSizesByArea;
 import camera.cn.cameramaster.util.Utils;
 import camera.cn.cameramaster.view.AutoFitTextureView;
@@ -431,8 +432,8 @@ public class GoogleCameraActivity extends BaseActivity {
         ms1.setOrientation(LinearLayoutManager.HORIZONTAL);
         evSenseList.setLayoutManager(ms);
         evEffectList.setLayoutManager(ms1);
-        sAdapter = new SenseAdapter(this);
-        effectAdapter = new EffectAdapter(this);
+        sAdapter = new SenseAdapter(this, AppConstant.senseArr);
+        effectAdapter = new EffectAdapter(this,AppConstant.effectArr);
         evSenseList.setAdapter(sAdapter);
         evEffectList.setAdapter(effectAdapter);
         //注册 eventbus

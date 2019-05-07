@@ -47,7 +47,7 @@ public class MainActivity extends BaseActivity {
 
     @Override
     protected void initView() {
-        mD65File= new File(getExternalFilesDir(null), "picD65.jpg");
+        mD65File = new File(getExternalFilesDir(null), "picD65.jpg");
         mFile = new File(getExternalFilesDir(null), "pic.jpg");
 
     }
@@ -57,7 +57,7 @@ public class MainActivity extends BaseActivity {
         requestPermission();
     }
 
-    @OnClick({R.id.btn_camera, R.id.btn_camera2, R.id.btn_filter_camera2})
+    @OnClick({R.id.btn_camera, R.id.btn_camera2, R.id.btn_filter_camera2, R.id.btn_camera2_video})
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btn_camera:
@@ -72,11 +72,14 @@ public class MainActivity extends BaseActivity {
                 Intent intentFilter2 = new Intent(this, CameraSurfaceViewActivity.class);
                 startActivityForResult(intentFilter2, 0);
                 break;
+            case R.id.btn_camera2_video:
+                Intent intentVideo = new Intent(this, CameraSurfaceViewActivity.class);
+                startActivityForResult(intentVideo, 0);
+                break;
             default:
                 break;
         }
     }
-
 
 
     @Override
@@ -94,7 +97,7 @@ public class MainActivity extends BaseActivity {
             intent.putExtra(AppConstant.KEY.PIC_HEIGHT, picHeight);
             intent.putExtra(AppConstant.KEY.IMG_PATH, imgPath);
             startActivity(intent);
-        }else if(requestCode == 1){
+        } else if (requestCode == 1) {
 //            tvMsg.setText("图片 D65 光源处理中 请勿退出....");
 //            new Thread(new Runnable() {
 //                @Override

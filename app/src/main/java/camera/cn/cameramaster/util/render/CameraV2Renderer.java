@@ -1,4 +1,4 @@
-package camera.cn.cameramaster.render;
+package camera.cn.cameramaster.util.render;
 
 import android.content.Context;
 import android.graphics.Bitmap;
