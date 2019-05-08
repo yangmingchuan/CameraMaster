@@ -15,7 +15,10 @@ import camera.cn.cameramaster.R;
 import camera.cn.cameramaster.view.AutoLocateHorizontalView;
 
 /**
- * Created by jianglei on 2/4/17.
+ * 选项适配器
+ *
+ * @author ymc
+ * @date 2019年5月8日 10:38:54
  */
 
 public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ItemViewHolder>

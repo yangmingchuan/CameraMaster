@@ -1,7 +1,11 @@
 package camera.cn.cameramaster.util;
 
+
+import java.util.Arrays;
+
 /**
- * @packageName: cn.tongue.tonguecamera.util
+ * rgb 转 lab 工具类
+ *
  * @fileName: LabUtil
  * @date: 2019/4/3  13:38
  * @author: ymc
@@ -9,11 +13,38 @@ package camera.cn.cameramaster.util;
  */
 
 public class LabUtil {
+
+    public static void main(String[] args) {
+        for (int i = 0; i < 24; i++) {
+            double[] a = AppConstant.rgbmap[i];
+            int fx = 0;
+            int fx1 = -30;
+            double rrr = a[0] + fx > 255 ? 255 :a[0] + fx;
+            double ggg = a[1] + fx > 255 ? 255 :a[1] + fx;
+            double bbb = a[2] + fx1 > 255 ? 255 :a[2] + fx1;
+            double[] xyz = LabUtil.sRGB2XYZ(new double[]{rrr,ggg,bbb});
+            double[] lab = LabUtil.XYZ2Lab(xyz);
+            double cha = Math.sqrt(Math.pow((lab[0] - AppConstant.labmap[i][0]), 2)
+                    + Math.pow((lab[1] - AppConstant.labmap[i][1]), 2)
+                    + Math.pow((lab[2] - AppConstant.labmap[i][2]), 2));
+            System.out.println(Arrays.toString(new double[]{rrr,ggg,bbb}) + "   lab[]:"+ Arrays.toString(lab) + "  色差:"+cha);
+            System.out.println("lab误差 l: "+(lab[0] - AppConstant.labmap[i][0]) +
+                    "  a: "+(lab[1] - AppConstant.labmap[i][1])+"  b: "+(lab[2] - AppConstant.labmap[i][2]));
+//            Log.e("", a.toString() + "   lab[]:"+lab.toString() + "  色差:"+cha);
+        }
+    }
+
     /**
      * D65  or  D50
      */
     private static boolean hasD50 = false;
 
+    /**
+     * lab 转 xyz
+     *
+     * @param Lab
+     * @return
+     */
     public static double[] Lab2XYZ(double[] Lab) {
         double[] XYZ = new double[3];
         double L, a, b;
@@ -111,13 +142,17 @@ public class LabUtil {
         return Lab;
     }
 
-
-    public static double[] sRGB2XYZ(double[] sRGB) {
+    /**
+     * rgb 转 xyz
+     *
+     * @return double[]
+     */
+    public static double[] sRGB2XYZ(double[] RGB) {
         double[] XYZ = new double[3];
         double sR, sG, sB;
-        sR = sRGB[0];
-        sG = sRGB[1];
-        sB = sRGB[2];
+        sR = RGB[0];
+        sG = RGB[1];
+        sB = RGB[2];
         sR /= 255;
         sG /= 255;
         sB /= 255;
@@ -153,7 +188,12 @@ public class LabUtil {
         return XYZ;
     }
 
-
+    /**
+     * xyz 转 rgb
+     *
+     * @param XYZ double[]
+     * @return double[]
+     */
     public static double[] XYZ2sRGB(double[] XYZ) {
         double[] sRGB = new double[3];
         double X, Y, Z;
@@ -162,9 +202,9 @@ public class LabUtil {
         Y = XYZ[1];
         Z = XYZ[2];
 
-        if(hasD50){
-            // TODO: 2019/4/3 D65格式暂时没有找到 D50格式
-        }else{
+        if (hasD50) {
+            // TODO: 2019/4/3 D50格式暂时没有找到 D50格式
+        } else {
             dr = 0.032406 * X - 0.015371 * Y - 0.0049895 * Z;
             dg = -0.0096891 * X + 0.018757 * Y + 0.00041914 * Z;
             db = 0.00055708 * X - 0.0020401 * Y + 0.01057 * Z;

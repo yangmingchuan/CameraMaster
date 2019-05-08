@@ -24,6 +24,7 @@ import android.media.Image;
 import android.media.ImageReader;
 import android.media.MediaRecorder;
 import android.os.Build;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.RequiresApi;
@@ -468,14 +469,18 @@ public class CameraHelper implements ICamera2 {
 
     @Override
     public boolean startVideoRecord(String path, int mediaType) {
-        if (mIsRecordVideo.get())
+        if (mIsRecordVideo.get()){
             new Throwable("video record is recording");
-        if (path == null)
+        }
+        if (path == null){
             new Throwable("path can not null");
-        if (mediaType != MediaRecorder.OutputFormat.MPEG_4)
+        }
+        if (mediaType != MediaRecorder.OutputFormat.MPEG_4){
             new Throwable("this mediaType can not support");
-        if (!setVideoRecordParam(path))
+        }
+        if (!setVideoRecordParam(path)){
             return false;
+        }
         startRecordVideo();
         return true;
     }
@@ -709,7 +714,7 @@ public class CameraHelper implements ICamera2 {
     /**
      * 如果设置了textureView则不用设置Surface
      *
-     * @param textureView
+     * @param textureView textureView
      */
     @Override
     public void setTextureView(TextureView textureView) {
@@ -1219,5 +1224,38 @@ public class CameraHelper implements ICamera2 {
             return min;
         }
         return x;
+    }
+
+
+    /**
+     * 视频录像保存的路径
+     *
+     * @return
+     */
+    public String getVideoFilePath() {
+        File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsoluteFile();
+        return (dir == null ? "" : (dir.getAbsolutePath() + "/"))
+                + System.currentTimeMillis() + ".mp4";
+    }
+
+    /**
+     * 图片拍照的路径
+     *
+     * @return
+     */
+    public String getPhotoFilePath() {
+        File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsoluteFile();
+        return (dir == null ? "" : (dir.getAbsolutePath() + "/"))
+                + System.currentTimeMillis() + ".jpeg";
+    }
+
+    /**
+     * dip 转 px
+     * @param context 上下文
+     * @param dipValue dip
+     * @return px
+     */
+    public int dip2px(Context context, float dipValue) {
+        return (int) (dipValue * context.getResources().getDisplayMetrics().density + 0.5f);
     }
 }
