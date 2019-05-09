@@ -24,7 +24,7 @@
         android:weightSum="1"
         android:orientation="horizontal">
 
-        <cn.tongue.tonguecamera.view.ShowSurfaceView
+        <camera.cn.cameramaster.view.ShowSurfaceView
             android:id="@+id/surfaceView2"
             android:layout_width="0dp"
             android:layout_weight="1"

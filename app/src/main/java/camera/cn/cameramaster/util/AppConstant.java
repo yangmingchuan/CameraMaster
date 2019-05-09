@@ -72,10 +72,6 @@ public class AppConstant {
      */
     public int NOW_MODE = VIDEO_TAKE_PHOTO;
 
-    /**
-     * 当前的显示面板状态
-     */
-    public int TEXTURE_STATE = TEXTURE_PREVIEW_STATE;
 
     /**
      * 感觉数组

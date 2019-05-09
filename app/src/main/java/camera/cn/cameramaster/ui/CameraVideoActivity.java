@@ -2,10 +2,13 @@ package camera.cn.cameramaster.ui;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Point;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.support.v4.content.ContextCompat;
@@ -26,8 +29,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
-
+import io.reactivex.functions.Consumer;
 import butterknife.BindView;
 import butterknife.OnClick;
 import camera.cn.cameramaster.R;
@@ -56,6 +58,11 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
         SensorEventListener, ICamera2.CameraReady, AutoLocateHorizontalView.OnSelectedPositionChangedListener {
 
     private static final String TAG = "CameraVideoActivity";
+
+    /**
+     * 当前的显示面板状态
+     */
+    public int TEXTURE_STATE = AppConstant.TEXTURE_PREVIEW_STATE;
 
     @BindView(R.id.video_photo)
     ImageView videoPhoto;
@@ -155,6 +162,14 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
      * 倒计时
      */
     private Disposable mDisposable;
+    /**
+     * 是否正在播放 标识
+     */
+    private boolean hasPlaying = false;
+    /**
+     * 是否有拍照权限
+     */
+    private boolean isNoPremissionPause;
 
 
     @Override
@@ -196,7 +211,17 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
     /**
      * 初始化 拍照
      */
+    @SuppressLint("ClickableViewAccessibility")
     private void initCameraMode() {
+        if(ContextCompat.checkSelfPermission(this,Manifest.permission.RECORD_AUDIO) !=
+                PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this,Manifest.permission.CAMERA) !=
+                        PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this,Manifest.permission.READ_EXTERNAL_STORAGE)
+                        != PackageManager.PERMISSION_GRANTED){
+            isNoPremissionPause = true;
+        }
+        initCamera(mNowCameraType);
         cameraHelper = new CameraHelper(this);
         cameraHelper.setTakePhotoListener(this);
         cameraHelper.setCameraReady(this);
@@ -213,6 +238,122 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
         videoMenu.setOnSelectedPositionChangedListener(this);
 
         mCameraTouch = new CameraTouch();
+
+        videoMenu.setOnTouchListener(new horizontalViewTouchListener());
+        cutPadding();
+        registerSensor();
+        initScaleSeekbar();
+    }
+
+    /**
+     * 初始化摄像头
+     *
+     * @param cameraType
+     */
+    private void initCamera(ICamera2.CameraType cameraType) {
+        if (cameraHelper == null)
+            return;
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        cameraHelper.setTextureView(videoTexture);
+        cameraHelper.openCamera(cameraType);
+    }
+
+
+    /**
+     * 初始化 scale seekBar
+     */
+    private void initScaleSeekbar() {
+        videoScale.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser) {
+                    float scale = (float) progress / (float) seekBar.getMax() * cameraHelper.getMaxZoom();
+                    cameraHelper.cameraZoom(scale);
+                    mCameraTouch.setScale(scale);
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                removeSeekBarRunnable();
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                seekBarDelayedHind();
+            }
+        });
+    }
+
+    /**
+     * 重新设置 padding
+     */
+    private void cutPadding() {
+        Point point = new Point();
+        getWindowManager().getDefaultDisplay().getSize(point);
+        int width = point.x;
+        int padding = videoRecordSeekBar.getPaddingLeft();
+        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) videoRecordSeekBar.getLayoutParams();
+        layoutParams.width = width + padding;
+        videoRecordSeekBar.setLayoutParams(layoutParams);
+        videoRecordSeekBar.setPadding(0, 0, 0, 0);
+    }
+
+    /**
+     * 横向列表 touch事件 (拍照预览 缩放)
+     */
+    private class horizontalViewTouchListener implements View.OnTouchListener{
+
+        private long mClickOn;
+        private float mLastX;
+        private float mLastY;
+
+        @Override
+        public boolean onTouch(View view, MotionEvent motionEvent) {
+            switch (motionEvent.getActionMasked()){
+                case MotionEvent.ACTION_DOWN:
+                    if (motionEvent.getPointerCount() == 1) {
+                        mClickOn = System.currentTimeMillis();
+                        mLastX = motionEvent.getX();
+                        mLastY = motionEvent.getY();
+                    }
+                    break;
+                // 用户两指按下事件
+                case MotionEvent.ACTION_POINTER_DOWN:
+                    mCameraTouch.onScaleStart(motionEvent);
+                    return true;
+                case MotionEvent.ACTION_MOVE:
+                    if (motionEvent.getPointerCount() == 2) {
+                        mCameraTouch.onScale(motionEvent);
+                        return true;
+                    }else{
+                        float x = motionEvent.getX()-mLastX;
+                        float y = motionEvent.getY()-mLastY;
+                        if(Math.abs(x) >= 10 || Math.abs(y) >= 10) {
+                            mClickOn = 0;
+                        }
+                    }
+                    break;
+                case MotionEvent.ACTION_UP:
+                    if (motionEvent.getPointerCount() == 1) {
+                        if((System.currentTimeMillis() - mClickOn) < 500)
+                        {
+                            moveFouces((int) motionEvent.getX(), (int) motionEvent.getY());
+                        }
+                    }
+                    break;
+                case MotionEvent.ACTION_POINTER_UP:
+                    mCameraTouch.onScaleEnd(motionEvent);
+                    return true;
+                default:
+                    break;
+            }
+            return false;
+        }
     }
 
     /**
@@ -220,51 +361,9 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
      *
      * @param view view
      */
-    @OnClick({R.id.video_record, R.id.video_switch_camera, R.id.video_switch_flash})
+    @OnClick({ R.id.video_switch_camera, R.id.video_switch_flash})
     public void cameraOnClickListener(View view) {
         switch (view.getId()) {
-            // 点击拍照或者 视频按钮
-            case R.id.video_record:
-                if (!hasRecordClick) {
-                    return;
-                }
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
-                        != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission
-                        (this, Manifest.permission.CAMERA)!= PackageManager.PERMISSION_GRANTED) {
-                    Log.e(TAG, "cameraOnClickListener: 动态权限获取失败...");
-                    return;
-                }
-                hasRecordClick = true;
-                //拍照
-                if (NOW_MODE == AppConstant.VIDEO_TAKE_PHOTO) {
-                    cameraHelper.takePhone(mCameraPath, ICamera2.MediaType.JPEG);
-                }
-                //录制视频
-                if (NOW_MODE == AppConstant.VIDEO_RECORD_MODE) {
-                    if (hasRecording) {
-                        // 暂停录像
-                        hasRecording = false;
-                        if (mDisposable != null && !mDisposable.isDisposed()){
-                            mDisposable.dispose();
-                        }
-                        mDisposable = null;
-                        videoSeekTime.setVisibility(View.GONE);
-                        cameraHelper.stopVideoRecord();
-
-                        videoRecord.setImageResource(R.mipmap.ic_record);
-                        videoRecord.setVisibility(View.GONE);
-                        videoClose.setVisibility(View.VISIBLE);
-                        videoHintText.setVisibility(View.GONE);
-//                        showRecordEndView();
-//                        hindVideoRecordSeekBar();
-//                        playVideo();
-                    } else {
-                        // 开始录像
-
-                    }
-                }
-                hasRecordClick = false;
-                break;
             // 切换摄像头状态
             case R.id.video_switch_camera:
                 if (mNowCameraType == ICamera2.CameraType.FRONT) {
@@ -299,12 +398,50 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
 
     /**
      * 传感器继承方法 重力发生改变
-     *
+     * 根据重力方向 动态旋转拍照图片角度
      * @param event event
      */
     @Override
     public void onSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_ORIENTATION) {
+            float x = event.values[0];
+            float y = event.values[1];
+            float z = event.values[2];
+            if (z > 55.0f) {
+                //向右横屏
+                cameraHelper.setDeviceRotation(1);
+            } else if (z < -55.0f) {
+                //向左横屏
+                cameraHelper.setDeviceRotation(3);
+            } else if (y > 60.0f) {
+                //是倒竖屏
+                cameraHelper.setDeviceRotation(2);
+            } else {
+                //正竖屏
+                cameraHelper.setDeviceRotation(0);
+            }
+        }
+        if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
+            float light = event.values[0];
+            cameraHelper.setLight(light);
+        }
+    }
 
+    /**
+     * 注册陀螺仪传感器
+     */
+    private SensorManager mSensorManager;
+    private Sensor mSensor;
+    private Sensor mLightSensor;
+
+    private void registerSensor() {
+        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
+        mLightSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
+        if (mSensor == null)
+            return;
+        mSensorManager.registerListener(this, mSensor, Sensor.TYPE_ORIENTATION);
+        mSensorManager.registerListener(this, mLightSensor, Sensor.TYPE_LIGHT);
     }
 
     /**
@@ -381,44 +518,82 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
         videoTime.setVisibility(View.VISIBLE);
         videoRecordSeekBar.setVisibility(View.VISIBLE);
         final int count = 15;
-//        mDisposable = Observable.interval(1, 1, TimeUnit.SECONDS)
-//                .take(count + 1)
-//                .map(new Function<Long, Long>() {
-//                    @Override
-//                    public Long apply(Long aLong) {
-//                        return count - aLong;
-//                    }
-//                }).observeOn(AndroidSchedulers.mainThread())
-//                .subscribe(new Consumer<Long>() {
-//                    @Override
-//                    public void accept(Long aLong) {
-//                        long time = 16 - aLong;
-//                        if (time < 10){
-//                            videoTime.setText("0:0" + String.valueOf(time));
-//                        }else{
-//                            videoTime.setText("0:" + String.valueOf(time));
-//                        }
-//                        videoRecordSeekBar.setProgress((int) time);
-//                        if (time == AppConstant.VIDEO_MAX_TIME) {
-//                            videoTime.postDelayed(new Runnable() {
-//                                @Override
-//                                public void run() {
-//                                    recordVideoOrTakePhoto();
-//                                    hindVideoRecordSeekBar();
-//                                }
-//                            }, 300);
-//
-//                        }
-//                    }
-//                });
+        mDisposable = Observable.interval(1, 1, TimeUnit.SECONDS)
+                .take(count + 1)
+                .map(new Function<Long, Long>() {
+                    @Override
+                    public Long apply(Long aLong) {
+                        return count - aLong;
+                    }
+                }).observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<Long>() {
+                    @Override
+                    public void accept(Long aLong) {
+                        long time = 11 - aLong;
+                        if (time < 10){
+                            videoTime.setText("0:0" + String.valueOf(time));
+                        }else{
+                            videoTime.setText("0:" + String.valueOf(time));
+                        }
+                        videoRecordSeekBar.setProgress((int) time);
+                        if (time == AppConstant.VIDEO_MAX_TIME) {
+                            videoTime.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    recordVideoOrTakePhoto();
+                                    hindVideoRecordSeekBar();
+                                }
+                            }, 300);
+
+                        }
+                    }
+                });
     }
 
-    private void hindVideoRecordSeekBar() {
+    /**
+     * 拍照或者录像
+     */
+    @OnClick(R.id.video_record)
+    public void recordVideoOrTakePhoto() {
+        if (!hasRecordClick) {
+            return;
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission
+                (this, Manifest.permission.CAMERA)!= PackageManager.PERMISSION_GRANTED) {
+            Log.e(TAG, "cameraOnClickListener: 动态权限获取失败...");
+            return;
+        }
+        hasRecordClick = true;
+        //拍照
+        if (NOW_MODE == AppConstant.VIDEO_TAKE_PHOTO) {
+            cameraHelper.takePhone(mCameraPath, ICamera2.MediaType.JPEG);
+        }
+        //录制视频
+        if (NOW_MODE == AppConstant.VIDEO_RECORD_MODE) {
+            if (hasRecording) {
+                // 暂停录像
+                hasRecording = false;
+                if (mDisposable != null && !mDisposable.isDisposed()){
+                    mDisposable.dispose();
+                }
+                mDisposable = null;
+                videoSeekTime.setVisibility(View.GONE);
+                cameraHelper.stopVideoRecord();
 
-    }
+                videoRecord.setImageResource(R.mipmap.ic_record);
+                videoRecord.setVisibility(View.GONE);
+                videoClose.setVisibility(View.VISIBLE);
+                videoHintText.setVisibility(View.GONE);
+                showRecordEndView();
+                hindVideoRecordSeekBar();
+                playVideo();
+            } else {
+                // 开始录像
 
-    private void recordVideoOrTakePhoto() {
-
+            }
+        }
+        hasRecordClick = false;
     }
 
     /**
@@ -613,4 +788,59 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
             videoScaleBarLayout.setVisibility(View.GONE);
         }
     };
+
+    /**
+     * 显示播放视频 的 确认和删除按钮
+     */
+    private void showRecordEndView() {
+        videoSave.setVisibility(View.VISIBLE);
+        videoDelete.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * 隐藏视频录像的进度条
+     */
+    private void hindVideoRecordSeekBar() {
+        videoRecordSeekBar.setVisibility(View.GONE);
+        videoRecordSeekBar.setProgress(0);
+    }
+
+    /**
+     * 关闭摄像头
+     */
+    private void closeCamera() {
+        videoRecord.setClickable(false);
+        cameraHelper.closeCamera();
+        cameraHelper.stopBackgroundThread();
+    }
+
+    /**
+     * 播放视频
+     */
+    private void playVideo() {
+        closeCamera();
+        if (mVideoPath != null && mVideoPlayer != null) {
+            mVideoPlayer.setDataSourceAndPlay(mVideoPath);
+            hasPlaying = true;
+            TEXTURE_STATE = AppConstant.TEXTURE_PLAY_STATE;  //视频播放状态
+        }
+    }
+
+    /**
+     * 移动焦点图标
+     * @param x x坐标
+     * @param y y坐标
+     */
+    private void moveFouces(int x, int y) {
+        videoFouces.setVisibility(View.VISIBLE);
+        FrameLayout.LayoutParams layoutParams
+                = (FrameLayout.LayoutParams) videoFouces.getLayoutParams();
+        videoFouces.setLayoutParams(layoutParams);
+        mFoucesAnimation.setDuration(500);
+        mFoucesAnimation.setRepeatCount(0);
+        mFoucesAnimation.setOldMargin(x, y);
+        videoFouces.startAnimation(mFoucesAnimation);
+        cameraHelper.requestFocus(x,y);
+    }
+
 }

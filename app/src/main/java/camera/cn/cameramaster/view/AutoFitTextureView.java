@@ -45,52 +45,49 @@ public class AutoFitTextureView extends TextureView {
         }
         mRatioWidth = width;
         mRatioHeight = height;
-        requestLayout();
+
+        float mRatio = (float) mRatioWidth / (float) mRatioHeight;   //算出相机的缩放比例
+
+        float w = mRatio * getHeight();
+        float scale;
+        if (w > getWidth())
+            scale = w / (float) getWidth();
+        else
+            scale = (float) getWidth() / w;
+
+        Matrix matrix = new Matrix();
+        matrix.postScale(scale, 1, getWidth() / 2, getHeight() / 2);
+        setTransform(matrix);
     }
 
     /**
      * 视频宽度适配
-     *
-     * @param width 宽度
-     * @param height 长度
+     * @param width
+     * @param height
      */
-    public void setVideoAspectRatio(int width, int height) {
+    public void setVideoAspectRatio(int width, int height)
+    {
         if (width < 0 || height < 0) {
             throw new IllegalArgumentException("Size cannot be negative.");
         }
         mRatioWidth = width;
         mRatioHeight = height;
-        //算出相机的缩放比例
-        float mRatio = (float) mRatioWidth / (float) mRatioHeight;
-        if (mRatio < 1.0) {
+
+        float mRatio = (float) mRatioWidth / (float) mRatioHeight;   //算出相机的缩放比例
+        if(mRatio < 1.0)
+        {
             setAspectRatio(width, height);
-        } else {
+        }else {
             float h = getWidth() / mRatio;
             float scale;
-            if (h > getHeight()){
+            if (h > getHeight())
                 scale = (float) getHeight() / h;
-            }else{
+            else
                 scale = h / (float) getHeight();
-            }
+
             Matrix matrix = new Matrix();
             matrix.postScale(1, scale, getWidth() / 2, getHeight() / 2);
             setTransform(matrix);
-        }
-    }
-
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        int width = MeasureSpec.getSize(widthMeasureSpec);
-        int height = MeasureSpec.getSize(heightMeasureSpec);
-        if (0 == mRatioWidth || 0 == mRatioHeight) {
-            setMeasuredDimension(width, height);
-        } else {
-            if (width < height * mRatioWidth / mRatioHeight) {
-                setMeasuredDimension(width, width * mRatioHeight / mRatioWidth);
-            } else {
-                setMeasuredDimension(height * mRatioWidth / mRatioHeight, height);
-            }
         }
     }
 

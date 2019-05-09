@@ -25,7 +25,7 @@
         android:layout_height="wrap_content"
         android:minHeight="3dp"
         android:maxHeight="3dp"
-        android:max="15"
+        android:max="10"
         android:splitTrack="false"
         android:layout_gravity="top"
         android:visibility="gone"
@@ -58,13 +58,14 @@
     <ImageButton
         android:id="@+id/video_switch_camera"
         android:layout_marginTop="16dp"
-        android:layout_width="28dp"
+        android:layout_width="30dp"
         android:layout_height="24dp"
         android:layout_gravity="right"
-        android:layout_marginRight="16dp"
+        android:layout_marginEnd="16dp"
         android:scaleType="center"
         android:background="@null"
-        android:src="@mipmap/ic_switch_camera"/>
+        android:src="@mipmap/ic_switch_camera"
+        tools:ignore="RtlHardcoded" />
 
     <ImageButton
         android:id="@+id/video_play"
@@ -82,7 +83,7 @@
         android:layout_width="58dp"
         android:layout_height="58dp"
         android:layout_gravity="left|bottom"
-        android:layout_marginLeft="45dp"
+        android:layout_marginStart="45dp"
         android:layout_marginBottom="36dp"
         android:scaleType="fitXY"
         android:background="@null"
@@ -114,7 +115,7 @@
         android:layout_width="58dp"
         android:layout_height="58dp"
         android:layout_gravity="right|bottom"
-        android:layout_marginRight="45dp"
+        android:layout_marginEnd="45dp"
         android:layout_marginBottom="36dp"
         android:scaleType="fitXY"
         android:background="@null"
@@ -129,7 +130,7 @@
         android:scaleType="fitXY"
         android:background="@null"
         android:layout_marginBottom="19dp"
-        android:layout_marginLeft="19dp"
+        android:layout_marginStart="19dp"
         android:layout_gravity="left|bottom"
         android:src="@mipmap/ic_play"
         android:visibility="gone"
@@ -139,7 +140,7 @@
         android:id="@+id/video_seek_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="58dp"
+        android:layout_marginStart="58dp"
         android:layout_marginBottom="30dp"
         android:minHeight="2dp"
         android:maxHeight="2dp"
@@ -155,7 +156,7 @@
         android:textSize="15sp"
         android:textColor="@android:color/white"
         android:layout_marginBottom="12dp"
-        android:layout_marginRight="20dp"
+        android:layout_marginEnd="20dp"
         android:layout_gravity="bottom|right"
         android:visibility="gone"
         />
@@ -201,8 +202,8 @@
 
         <SeekBar
             android:id="@+id/video_scale"
-            android:layout_toRightOf="@+id/video_minus"
-            android:layout_toLeftOf="@+id/video_add"
+            android:layout_toEndOf="@+id/video_minus"
+            android:layout_toStartOf="@+id/video_add"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
@@ -216,7 +217,7 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_gravity="left"
-            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
             android:scaleType="fitXY"
             android:src="@mipmap/ic_add"/>
     </RelativeLayout>
@@ -226,7 +227,7 @@
         android:layout_width="43dp"
         android:layout_height="43dp"
         android:layout_gravity="left"
-        android:layout_marginLeft="16dp"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:background="@null"
         android:padding="20dp"

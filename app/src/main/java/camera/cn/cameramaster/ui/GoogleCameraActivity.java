@@ -732,6 +732,8 @@ public class GoogleCameraActivity extends BaseActivity {
                 if (map == null) {
                     continue;
                 }
+                List<CaptureRequest.Key<?>> ss = characteristics.getAvailableCaptureRequestKeys();
+                Log.e(TAG, ss.toString());
                 // 曝光增益 范围
                 range1 = characteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_RANGE);
                 //获取支持的iso范围
