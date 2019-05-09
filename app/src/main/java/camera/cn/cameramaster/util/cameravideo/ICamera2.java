@@ -1,4 +1,4 @@
-package camera.cn.cameramaster.ui;
+package camera.cn.cameramaster.util.cameravideo;
 
 import android.util.Size;
 import android.view.Surface;

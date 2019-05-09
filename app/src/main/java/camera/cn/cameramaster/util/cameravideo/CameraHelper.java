@@ -23,11 +23,13 @@ import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
 import android.media.MediaRecorder;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.RequiresApi;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
@@ -45,12 +47,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import camera.cn.cameramaster.ui.ICamera2;
 import camera.cn.cameramaster.view.AutoFitTextureView;
 
 
 /**
- * 摄像头帮助类
+ * 摄像头整合帮助类
+ *
+ * @date 2019年5月9日 17:08:21
  */
 
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -828,8 +831,9 @@ public class CameraHelper implements ICamera2 {
      * 停止后台进程
      */
     public void stopBackgroundThread() {
-        if (mBackgroundThread != null)
+        if (mBackgroundThread != null){
             mBackgroundThread.quitSafely();
+        }
         try {
             if (mBackgroundThread != null){
                 mBackgroundThread.join();
@@ -1257,5 +1261,66 @@ public class CameraHelper implements ICamera2 {
      */
     public int dip2px(Context context, float dipValue) {
         return (int) (dipValue * context.getResources().getDisplayMetrics().density + 0.5f);
+    }
+
+    /**
+     * 整数s转 xx:xx:xx
+     *
+     * @param time time
+     * @return time
+     */
+    public String secToTime(int time) {
+        String timeStr;
+        int hour;
+        int minute;
+        int second;
+        if (time <= 0){
+            return "00:00";
+        }
+        else {
+            minute = time / 60;
+            if (minute < 60) {
+                second = time % 60;
+                timeStr = unitFormat(minute) + ":" + unitFormat(second);
+            } else {
+                hour = minute / 60;
+                if (hour > 99){
+                    return "99:59:59";
+                }
+                minute = minute % 60;
+                second = time - hour * 3600 - minute * 60;
+                timeStr = unitFormat(hour) + ":" + unitFormat(minute) + ":" + unitFormat(second);
+            }
+        }
+        return timeStr;
+    }
+
+    /**
+     * 格式化 时间
+     * @param i 时间
+     * @return 格式化时间
+     */
+    private String unitFormat(int i) {
+        String retStr;
+        if (i >= 0 && i < 10){
+            retStr = "0" + Integer.toString(i);
+        }else{
+            retStr = "" + i;
+        }
+        return retStr;
+    }
+
+    /**
+     * 根据 文件获取uri
+     * @param context 上下文对象
+     * @param file 文件
+     * @return uri
+     */
+    public Uri getUriFromFile(Context context, File file) {
+        if (Build.VERSION.SDK_INT >= 24) {
+            return FileProvider.getUriForFile(context, context.getPackageName() + ".fileprovider", file);
+        } else {
+            return Uri.fromFile(file);
+        }
     }
 }

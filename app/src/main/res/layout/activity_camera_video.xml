@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -10,227 +10,204 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="fitCenter"
-        android:visibility="gone"
-        />
+        android:visibility="gone" />
 
     <camera.cn.cameramaster.view.AutoFitTextureView
         android:id="@+id/video_texture"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        />
+        android:layout_height="match_parent" />
 
     <SeekBar
         android:id="@+id/video_record_seek_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minHeight="3dp"
-        android:maxHeight="3dp"
-        android:max="10"
-        android:splitTrack="false"
         android:layout_gravity="top"
-        android:visibility="gone"
-        />
+        android:max="10"
+        android:maxHeight="3dp"
+        android:minHeight="3dp"
+        android:splitTrack="false"
+        android:visibility="gone" />
 
 
     <TextView
         android:id="@+id/video_time"
-        android:layout_marginTop="18dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal|top"
+        android:layout_marginTop="18dp"
+        android:textColor="@android:color/white"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:textColor="@android:color/white"
-        android:visibility="gone"
-        />
+        android:visibility="gone" />
 
-    <ImageButton
+    <ImageView
         android:id="@+id/video_switch_flash"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="20dp"
         android:layout_marginTop="16dp"
-        android:layout_width="28dp"
-        android:layout_height="24dp"
-        android:layout_gravity="right"
-        android:layout_marginRight="67dp"
         android:scaleType="center"
-        android:background="@null"
-        android:src="@mipmap/flash_close"/>
+        android:background="@mipmap/flash_close" />
 
-    <ImageButton
+    <ImageView
         android:id="@+id/video_switch_camera"
-        android:layout_marginTop="16dp"
         android:layout_width="30dp"
         android:layout_height="24dp"
-        android:layout_gravity="right"
+        android:layout_alignParentRight="true"
         android:layout_marginEnd="16dp"
+        android:layout_marginTop="16dp"
         android:scaleType="center"
-        android:background="@null"
-        android:src="@mipmap/ic_switch_camera"
+        android:background="@mipmap/ic_switch_camera"
         tools:ignore="RtlHardcoded" />
 
     <ImageButton
         android:id="@+id/video_play"
         android:layout_width="83dp"
         android:layout_height="83dp"
-        android:scaleType="fitXY"
+        android:layout_centerInParent="true"
         android:background="@null"
-        android:layout_gravity="center"
+        android:scaleType="fitXY"
         android:src="@mipmap/ic_play"
-        android:visibility="gone"
-        />
+        android:visibility="gone" />
 
     <ImageButton
         android:id="@+id/video_delete"
         android:layout_width="58dp"
         android:layout_height="58dp"
-        android:layout_gravity="left|bottom"
-        android:layout_marginStart="45dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
         android:layout_marginBottom="36dp"
-        android:scaleType="fitXY"
+        android:layout_marginStart="45dp"
         android:background="@null"
+        android:scaleType="fitXY"
         android:src="@mipmap/ic_delete"
-        android:visibility="gone"
-        />
+        android:visibility="gone" />
 
     <camera.cn.cameramaster.view.AutoLocateHorizontalView
         android:id="@+id/video_menu"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="bottom"
-        android:overScrollMode="never"
         android:layout_marginBottom="106dp"
-        android:layout_marginTop="60dp"/>
+        android:layout_marginTop="60dp"
+        android:overScrollMode="never" />
 
     <ImageButton
         android:id="@+id/video_record"
         android:layout_width="58dp"
         android:layout_height="58dp"
-        android:layout_gravity="center_horizontal|bottom"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
         android:layout_marginBottom="36dp"
-        android:scaleType="fitXY"
         android:background="@null"
-        android:src="@drawable/ic_camera"/>
+        android:scaleType="fitXY"
+        android:src="@drawable/ic_camera" />
 
     <ImageButton
         android:id="@+id/video_save"
         android:layout_width="58dp"
         android:layout_height="58dp"
-        android:layout_gravity="right|bottom"
-        android:layout_marginEnd="45dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
         android:layout_marginBottom="36dp"
-        android:scaleType="fitXY"
+        android:layout_marginEnd="45dp"
         android:background="@null"
+        android:scaleType="fitXY"
         android:src="@mipmap/ic_save"
-        android:visibility="gone"
-        />
+        android:visibility="gone" />
 
     <ImageButton
         android:id="@+id/video_mine_play"
         android:layout_width="34dp"
         android:layout_height="34dp"
-        android:scaleType="fitXY"
-        android:background="@null"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
         android:layout_marginBottom="19dp"
         android:layout_marginStart="19dp"
-        android:layout_gravity="left|bottom"
+        android:background="@null"
+        android:scaleType="fitXY"
         android:src="@mipmap/ic_play"
-        android:visibility="gone"
-        />
+        android:visibility="gone" />
 
     <SeekBar
         android:id="@+id/video_seek_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="58dp"
-        android:layout_marginBottom="30dp"
-        android:minHeight="2dp"
-        android:maxHeight="2dp"
-        android:splitTrack="false"
         android:layout_gravity="bottom"
-        android:visibility="gone"
-        />
+        android:layout_marginBottom="30dp"
+        android:layout_marginStart="58dp"
+        android:maxHeight="2dp"
+        android:minHeight="2dp"
+        android:splitTrack="false"
+        android:visibility="gone" />
 
     <TextView
         android:id="@+id/video_seek_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="15sp"
-        android:textColor="@android:color/white"
+        android:layout_gravity="bottom|right"
         android:layout_marginBottom="12dp"
         android:layout_marginEnd="20dp"
-        android:layout_gravity="bottom|right"
-        android:visibility="gone"
-        />
+        android:textColor="@android:color/white"
+        android:textSize="15sp"
+        android:visibility="gone" />
 
     <TextView
         android:id="@+id/video_hint_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="14sp"
-        android:textColor="@android:color/white"
-        android:text="点击拍照"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
         android:layout_marginBottom="8dp"
-        android:layout_gravity="bottom|center_horizontal"
-        />
+        android:text="点击拍照"
+        android:textColor="@android:color/white"
+        android:textSize="14sp" />
 
     <ImageView
         android:id="@+id/video_fouces"
         android:layout_width="65dp"
         android:layout_height="65dp"
-        android:src="@mipmap/ic_fouces"
         android:scaleType="fitCenter"
-        android:visibility="gone"
-        />
+        android:src="@mipmap/ic_fouces"
+        android:visibility="gone" />
 
     <RelativeLayout
         android:id="@+id/video_scale_bar_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingRight="40dp"
-        android:paddingLeft="40dp"
-        android:layout_gravity="bottom"
+        android:layout_alignParentBottom="true"
         android:layout_marginBottom="150dp"
-        android:visibility="gone"
-        >
+        android:paddingLeft="40dp"
+        android:paddingRight="40dp"
+        android:visibility="gone">
 
         <ImageView
             android:id="@+id/video_minus"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:layout_gravity="left"
+            android:layout_alignParentStart="true"
             android:scaleType="fitXY"
-            android:src="@mipmap/ic_minus"/>
+            android:src="@mipmap/ic_minus" />
 
         <SeekBar
             android:id="@+id/video_scale"
-            android:layout_toEndOf="@+id/video_minus"
-            android:layout_toStartOf="@+id/video_add"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:minHeight="4dp"
+            android:layout_toEndOf="@+id/video_minus"
+            android:layout_toStartOf="@+id/video_add"
             android:maxHeight="4dp"
-            android:splitTrack="false"
-            />
+            android:minHeight="4dp"
+            android:splitTrack="false" />
 
         <ImageView
             android:id="@+id/video_add"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:layout_gravity="left"
             android:layout_alignParentEnd="true"
             android:scaleType="fitXY"
-            android:src="@mipmap/ic_add"/>
+            android:src="@mipmap/ic_add" />
     </RelativeLayout>
 
-    <ImageButton
-        android:id="@+id/video_close"
-        android:layout_width="43dp"
-        android:layout_height="43dp"
-        android:layout_gravity="left"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:background="@null"
-        android:padding="20dp"
-        android:scaleType="center"
-        android:src="@mipmap/ic_close" />
-</FrameLayout>
+</RelativeLayout>

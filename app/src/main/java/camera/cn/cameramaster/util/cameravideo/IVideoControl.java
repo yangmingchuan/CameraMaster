@@ -1,4 +1,4 @@
-package camera.cn.cameramaster.ui;
+package camera.cn.cameramaster.util.cameravideo;
 
 /**
  * 视频接口

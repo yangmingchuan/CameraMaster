@@ -10,7 +10,7 @@
         android:layout_alignParentEnd="true"
         android:layout_height="match_parent">
 
-        <camera.cn.cameramaster.view.AutoFitTextureView
+        <camera.cn.cameramaster.view.AutoTextureView
             android:id="@+id/textureView_g"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />

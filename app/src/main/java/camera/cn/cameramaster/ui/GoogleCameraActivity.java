@@ -88,6 +88,7 @@ import camera.cn.cameramaster.util.AppConstant;
 import camera.cn.cameramaster.util.CompareSizesByArea;
 import camera.cn.cameramaster.util.Utils;
 import camera.cn.cameramaster.view.AutoFitTextureView;
+import camera.cn.cameramaster.view.AutoTextureView;
 import camera.cn.cameramaster.view.ShowSurfaceView;
 import camera.cn.cameramaster.view.AnimationTextView;
 import camera.cn.cameramaster.view.AwbSeekBar;
@@ -115,7 +116,7 @@ public class GoogleCameraActivity extends BaseActivity {
      * 则隐藏 ShowSurfaceView ，将AutoFitTextureView设置充满
      */
     @BindView(R.id.textureView_g)
-    AutoFitTextureView mTextureView;
+    AutoTextureView mTextureView;
     @BindView(R.id.surfaceView2)
     ShowSurfaceView svShow;
     /**

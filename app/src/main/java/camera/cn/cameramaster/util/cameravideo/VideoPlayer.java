@@ -12,8 +12,6 @@ import android.view.Surface;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import camera.cn.cameramaster.ui.IVideoControl;
-
 
 /**
  * 视频播放器
