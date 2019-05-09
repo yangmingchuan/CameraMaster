@@ -381,36 +381,44 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
         videoTime.setVisibility(View.VISIBLE);
         videoRecordSeekBar.setVisibility(View.VISIBLE);
         final int count = 15;
-        mDisposable = Observable.interval(1, 1, TimeUnit.SECONDS)
-                .take(count + 1)
-                .map(new Function<Long, Long>() {
-                    @Override
-                    public Long apply(Long aLong) {
-                        return count - aLong;
-                    }
-                }).observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<Long>() {
-                    @Override
-                    public void accept(Long aLong) {
-                        long time = 16 - aLong;
-                        if (time < 10){
-                            videoTime.setText("0:0" + String.valueOf(time));
-                        }else{
-                            videoTime.setText("0:" + String.valueOf(time));
-                        }
-                        videoRecordSeekBar.setProgress((int) time);
-                        if (time == AppConstant.VIDEO_MAX_TIME) {
-                            videoTime.postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    recordVideoOrTakePhoto();
-                                    hindVideoRecordSeekBar();
-                                }
-                            }, 300);
+//        mDisposable = Observable.interval(1, 1, TimeUnit.SECONDS)
+//                .take(count + 1)
+//                .map(new Function<Long, Long>() {
+//                    @Override
+//                    public Long apply(Long aLong) {
+//                        return count - aLong;
+//                    }
+//                }).observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(new Consumer<Long>() {
+//                    @Override
+//                    public void accept(Long aLong) {
+//                        long time = 16 - aLong;
+//                        if (time < 10){
+//                            videoTime.setText("0:0" + String.valueOf(time));
+//                        }else{
+//                            videoTime.setText("0:" + String.valueOf(time));
+//                        }
+//                        videoRecordSeekBar.setProgress((int) time);
+//                        if (time == AppConstant.VIDEO_MAX_TIME) {
+//                            videoTime.postDelayed(new Runnable() {
+//                                @Override
+//                                public void run() {
+//                                    recordVideoOrTakePhoto();
+//                                    hindVideoRecordSeekBar();
+//                                }
+//                            }, 300);
+//
+//                        }
+//                    }
+//                });
+    }
 
-                        }
-                    }
-                });
+    private void hindVideoRecordSeekBar() {
+
+    }
+
+    private void recordVideoOrTakePhoto() {
+
     }
 
     /**

@@ -935,17 +935,17 @@ public class GoogleCameraActivity extends BaseActivity {
 //                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_OFF);
                                 //而 ISO 和 Exposure Time 与之相反，仅在 aeMode 关闭时才起作用
                                 //只是禁用自动曝光，白平衡继续开启,自己设置iso等值，必须禁用曝光
-//                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);
+                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);
                                 //设置曝光时间 ms单位
-                                mPreviewRequestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, 1000L);
-                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, 1);
+//                                mPreviewRequestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, 1000L);
+//                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, 1);
                                 // 设置 iso 灵敏度
-                                mPreviewRequestBuilder.set(CaptureRequest.SENSOR_SENSITIVITY, 200);
-                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_AUTO);
+                                mPreviewRequestBuilder.set(CaptureRequest.SENSOR_SENSITIVITY, 800);
+//                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_AUTO);
                                 //设置曝光补偿
-                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, 10);
+//                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, 10);
                                 // 设置帧 持续时长
-                                mPreviewRequestBuilder.set(CaptureRequest.SENSOR_FRAME_DURATION, 1000L);
+//                                mPreviewRequestBuilder.set(CaptureRequest.SENSOR_FRAME_DURATION, 1000L);
                                 mPreviewRequest = mPreviewRequestBuilder.build();
                                 mCaptureSession.setRepeatingRequest(mPreviewRequest,
                                         mCaptureCallback, mBackgroundHandler);
