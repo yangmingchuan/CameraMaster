@@ -74,7 +74,7 @@ public class MainActivity extends BaseActivity {
                 break;
             case R.id.btn_camera2_video:
                 Intent intentVideo = new Intent(this, CameraVideoActivity.class);
-                startActivityForResult(intentVideo, 0);
+                startActivity(intentVideo);
                 break;
             default:
                 break;

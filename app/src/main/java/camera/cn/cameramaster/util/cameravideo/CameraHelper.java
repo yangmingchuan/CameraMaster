@@ -538,6 +538,9 @@ public class CameraHelper implements ICamera2 {
         } else {
             return;
         }
+        mMediaRecorder.setOnErrorListener(null);
+        mMediaRecorder.setOnInfoListener(null);
+        mMediaRecorder.setPreviewDisplay(null);
         mMediaRecorder.stop();
         mMediaRecorder.reset();
         mMediaRecorder.release();
@@ -1025,10 +1028,10 @@ public class CameraHelper implements ICamera2 {
                         e.printStackTrace();
                     }
                 }
+                resumePreview();
                 if (mTakePhotoListener != null){
                     mTakePhotoListener.onTakePhotoFinish(mFile, mPhotoRotation, 0, 0);
                 }
-                resumePreview();
             }
         }
     }
@@ -1237,20 +1240,21 @@ public class CameraHelper implements ICamera2 {
      * @return
      */
     public String getVideoFilePath() {
-        File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsoluteFile();
-        return (dir == null ? "" : (dir.getAbsolutePath() + "/"))
-                + System.currentTimeMillis() + ".mp4";
+//        File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsoluteFile();
+//        return (dir == null ? "" : (dir.getAbsolutePath() + "/"))
+//                + System.currentTimeMillis() + ".mp4";
+        return String.valueOf(new File(mContext.getExternalFilesDir(null), System.currentTimeMillis() + ".mp4"));
     }
 
     /**
      * 图片拍照的路径
      *
-     * @return
+     * @return 图片路径
      */
     public String getPhotoFilePath() {
-        File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsoluteFile();
-        return (dir == null ? "" : (dir.getAbsolutePath() + "/"))
-                + System.currentTimeMillis() + ".jpeg";
+//        File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsoluteFile();
+//        return (dir == null ? "" : (dir.getAbsolutePath() + "/")) + System.currentTimeMillis() + ".jpeg";
+        return String.valueOf(new File(mContext.getExternalFilesDir(null), System.currentTimeMillis() + ".jpg"));
     }
 
     /**

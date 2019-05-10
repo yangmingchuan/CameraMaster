@@ -3,12 +3,14 @@ package camera.cn.cameramaster.ui;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.support.v4.content.ContextCompat;
@@ -207,7 +209,45 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
      * 初始化 录像
      */
     private void initVideoMode() {
+        hindMenu();
+        hindSwitchCamera();
+        hindVideoRecordSeekBar();
+        mVideoPlayer.setPlayStateListener(this);
+        videoRecord.setVisibility(View.GONE);
+        videoHintText.setVisibility(View.GONE);
+        videoTexture.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {     //单机屏幕显示出控件
+                if (videoMinePlay.getVisibility() == View.VISIBLE) {
+                    hindPlayView();
+                } else {
+                    showPlayView();
+                    videoTexture.postDelayed(mHindViewRunnable, 3000);
+                }
+            }
+        });
 
+        videoSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            private int progress;
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser) {
+                    this.progress = progress;
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                //触摸进度条取消几秒后隐藏的事件
+                videoTexture.removeCallbacks(mHindViewRunnable);
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                mVideoPlayer.seekTo(progress);
+                videoTexture.postDelayed(mHindViewRunnable, 3000);
+            }
+        });
     }
 
     /**
@@ -482,20 +522,20 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
      * @param height        高度
      */
     @Override
-    public void onTakePhotoFinish(File file, int photoRotation, int width, int height) {
+    public void onTakePhotoFinish(final File file, int photoRotation, int width, int height) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 hindSwitchCamera();
-//                hindMenu();
-//                showRecordEndView();
-//                mFlashSwitch.setVisibility(View.GONE);
-//                mRecordImageButton.setVisibility(View.GONE);
-//                mVideoHintText.setVisibility(View.GONE);
-//                TEXTURE_STATE = AppConstant.TEXTURE_PHOTO_STATE;
-//                textureView.setVisibility(View.GONE);
-//                mPhotoImageView.setImageURI(cameraHelper.getUriFromFile(CameraVideoActivity.this, file));
-//                mPhotoImageView.setVisibility(View.VISIBLE);
+                hindMenu();
+                showRecordEndView();
+                videoSwitchFlash.setVisibility(View.GONE);
+                videoRecord.setVisibility(View.GONE);
+                videoHintText.setVisibility(View.GONE);
+                TEXTURE_STATE = AppConstant.TEXTURE_PHOTO_STATE;
+                videoTexture.setVisibility(View.GONE);
+                videoPhoto.setImageURI(cameraHelper.getUriFromFile(CameraVideoActivity.this, file));
+                videoPhoto.setVisibility(View.VISIBLE);
             }
         });
     }
@@ -582,7 +622,7 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
             return;
         }
         //拍照
-        if (NOW_MODE == AppConstant.VIDEO_TAKE_PHOTO) {
+        if (NOW_MODE == AppConstant.VIDEO_TAKE_PHOTO && mCameraPath!=null) {
             cameraHelper.takePhone(mCameraPath, ICamera2.MediaType.JPEG);
         }
         //录制视频
@@ -605,10 +645,81 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
                 playVideo();
             } else {
                 // 开始录像
+                if (mDisposable != null && !mDisposable.isDisposed()){
+                    mDisposable.dispose();
+                }
+                mDisposable = null;
+                videoSeekTime.setVisibility(View.GONE);
+                hasRecording = false;
+                cameraHelper.stopVideoRecord();
 
+                videoRecord.setImageResource(R.mipmap.ic_record);
+                videoRecord.setVisibility(View.GONE);
+                videoHintText.setVisibility(View.GONE);
+                showRecordEndView();
+                hindVideoRecordSeekBar();
+                playVideo();
             }
         }
         hasRecordClick = false;
+    }
+
+    /**
+     * 返回 取消拍照或者 录像
+     */
+    @OnClick(R.id.video_delete)
+    public void deleteVideoOrPicture() {
+        if (TEXTURE_STATE == AppConstant.TEXTURE_PLAY_STATE) {
+            mVideoPlayer.stop();
+            cameraHelper.startBackgroundThread();
+            cameraHelper.openCamera(mNowCameraType);
+            mCameraTouch.resetScale();  //重新打开摄像头重置一下放大倍数
+            File file = new File(mVideoPath);
+            if (file.exists()){
+                file.delete();
+            }
+            videoHintText.setText("点击录像");
+        } else if (TEXTURE_STATE == AppConstant.TEXTURE_PHOTO_STATE) {
+            File file = new File(mCameraPath);
+            if (file.exists()){
+                file.delete();
+            }
+            cameraHelper.resumePreview();
+            videoTexture.setVisibility(View.VISIBLE);
+            videoPhoto.setVisibility(View.GONE);
+            videoHintText.setText("点击拍照");
+        }
+        initData();
+        TEXTURE_STATE = AppConstant.TEXTURE_PREVIEW_STATE;
+        hindRecordEndView();
+        videoSwitchCamera.setVisibility(View.VISIBLE);
+        videoMenu.setVisibility(View.VISIBLE);
+        videoRecord.setVisibility(View.VISIBLE);
+        videoTime.setVisibility(View.GONE);
+        videoTime.setText("0:00");
+        videoHintText.setVisibility(View.VISIBLE);
+        videoSwitchFlash.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * 发送视频或者图片
+     */
+    @OnClick(R.id.video_save)
+    public void saveVideoOrPhoto() {
+        final Intent data;
+        data = new Intent();
+        if (NOW_MODE == AppConstant.VIDEO_TAKE_PHOTO){
+            data.putExtra("path", mCameraPath);
+            data.putExtra("mediaType", "image");
+            saveMedia(new File(mCameraPath));
+        }
+        else if (NOW_MODE == AppConstant.VIDEO_RECORD_MODE) {
+            data.putExtra("path", mVideoPath);
+            data.putExtra("mediaType", "video");
+            saveMedia(new File(mVideoPath));
+        }
+        setResult(RESULT_OK, data);
+        finish();
     }
 
     /**
@@ -941,6 +1052,63 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
      */
     private void hindSwitchCamera() {
         videoSwitchCamera.setVisibility(View.GONE);
+    }
+
+    /**
+     * 隐藏切换菜单
+     */
+    private void hindMenu() {
+        videoMenu.setVisibility(View.GONE);
+    }
+
+    /**
+     * 刷新相册
+     *
+     * @param mediaFile 文件
+     */
+    private void saveMedia(File mediaFile) {
+        Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        Uri uri = Uri.fromFile(mediaFile);
+        intent.setData(uri);
+        sendBroadcast(intent);
+    }
+
+    /**
+     * 隐藏录像完成后底部两个按钮
+     */
+    private void hindRecordEndView() {
+        videoSave.setVisibility(View.GONE);
+        videoDelete.setVisibility(View.GONE);
+    }
+
+    /**
+     * 隐藏播放界面的控件出来
+     */
+    private void hindPlayView() {
+        videoSeekBar.setVisibility(View.GONE);
+        videoMinePlay.setVisibility(View.GONE);
+        videoPlay.setVisibility(View.GONE);
+        videoSeekTime.setVisibility(View.GONE);
+    }
+
+    /**
+     * 视频播放模式控件隐藏
+     */
+    private Runnable mHindViewRunnable = new Runnable() {
+        @Override
+        public void run() {
+            hindPlayView();
+        }
+    };
+
+    /**
+     * 显示播放界面的控件出来
+     */
+    private void showPlayView() {
+        videoSeekBar.setVisibility(View.VISIBLE);
+        videoMinePlay.setVisibility(View.VISIBLE);
+        videoPlay.setVisibility(View.VISIBLE);
+        videoSeekTime.setVisibility(View.VISIBLE);
     }
 
 }
