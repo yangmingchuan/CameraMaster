@@ -10,6 +10,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
@@ -482,7 +483,7 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
 
     @Override
     public void onSeekTime(int allTime, final int time) {
-        if (videoSeekBar.getVisibility() != View.VISIBLE){
+        if (videoSeekBar ==null || videoSeekBar.getVisibility() != View.VISIBLE){
             return;
         }
         if (videoSeekBar.getMax() != allTime){
@@ -627,22 +628,26 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
         }
         //录制视频
         if (NOW_MODE == AppConstant.VIDEO_RECORD_MODE) {
-            if (hasRecording) {
+            if (!hasRecording) {
                 // 暂停录像
-                hasRecording = false;
-                if (mDisposable != null && !mDisposable.isDisposed()) {
-                    mDisposable.dispose();
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                        != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission
+                        (this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                    return;
                 }
-                mDisposable = null;
-                videoSeekTime.setVisibility(View.GONE);
-                cameraHelper.stopVideoRecord();
 
-                videoRecord.setImageResource(R.mipmap.ic_record);
-                videoRecord.setVisibility(View.GONE);
-                videoHintText.setVisibility(View.GONE);
-                showRecordEndView();
-                hindVideoRecordSeekBar();
-                playVideo();
+                mVideoPath = cameraHelper.getVideoFilePath();
+                hasRecording = cameraHelper.startVideoRecord(mVideoPath, MediaRecorder.OutputFormat.MPEG_4);
+                if (hasRecording) {
+                    videoRecord.setImageResource(R.mipmap.ic_recording);
+                    hindSwitchCamera();
+                    recordCountDown();
+                    hindMenu();
+                    //      mVideoHintText.setVisibility(View.GONE);
+                    videoHintText.setText("点击停止");
+                    videoSwitchFlash.setVisibility(View.GONE);
+                    TEXTURE_STATE = AppConstant.TEXTURE_RECORD_STATE;
+                }
             } else {
                 // 开始录像
                 if (mDisposable != null && !mDisposable.isDisposed()){
@@ -653,7 +658,7 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
                 hasRecording = false;
                 cameraHelper.stopVideoRecord();
 
-                videoRecord.setImageResource(R.mipmap.ic_record);
+                videoRecord.setImageResource(R.drawable.ic_camera);
                 videoRecord.setVisibility(View.GONE);
                 videoHintText.setVisibility(View.GONE);
                 showRecordEndView();
