@@ -10,12 +10,14 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.hardware.camera2.CaptureRequest;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.Surface;
@@ -23,14 +25,18 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
+import android.view.animation.TranslateAnimation;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -51,6 +57,11 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
+
+import static camera.cn.cameramaster.util.AppConstant.SHOW_AE;
+import static camera.cn.cameramaster.util.AppConstant.SHOW_AWB;
+import static camera.cn.cameramaster.util.AppConstant.SHOW_EFFECT;
+import static camera.cn.cameramaster.util.AppConstant.SHOW_SENSE;
 
 /**
  * 拍照 视频
@@ -101,16 +112,68 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
     TextView videoSeekTime;
     @BindView(R.id.video_hint_text)
     TextView videoHintText;
+    /**
+     * 焦点框
+     */
     @BindView(R.id.video_fouces)
     ImageView videoFouces;
+    /**
+     * zoom 缩小
+     */
     @BindView(R.id.video_minus)
     ImageView videoMinus;
+    /**
+     * scale zoom 条
+     */
     @BindView(R.id.video_scale)
     SeekBar videoScale;
+    /**
+     *  zoom 放大
+     */
     @BindView(R.id.video_add)
     ImageView videoAdd;
     @BindView(R.id.video_scale_bar_layout)
     RelativeLayout videoScaleBarLayout;
+    /**
+     * 底部切换布局
+     */
+    @BindView(R.id.layout_bottom)
+    RelativeLayout mLayoutBottom;
+
+    /**
+     * ae 修改布局
+     */
+    @BindView(R.id.layout_ae)
+    LinearLayout layoutAe;
+    /**
+     * 特效
+     */
+    @BindView(R.id.layout_effect)
+    LinearLayout llEffect;
+    @BindView(R.id.rv_effect_list)
+    RecyclerView evEffectList;
+    @BindView(R.id.layout_sense)
+    LinearLayout llSense;
+    @BindView(R.id.rv_sense_list)
+    RecyclerView evSenseList;
+    @BindView(R.id.sb_ae)
+    SeekBar sbAe;
+
+    /**
+     * awb
+     */
+    @BindView(R.id.layout_awb)
+    LinearLayout layoutAwb;
+
+    @BindView(R.id.rl_camera)
+    RelativeLayout rlCamera;
+
+    @BindView(R.id.switch_ae)
+    Switch switchAe;
+
+    @BindView(R.id.txt_sb_txt)
+    TextView tvSbTxt;
+
     /**
      * 视频播放器
      */
@@ -175,7 +238,24 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
      * 是否有拍照权限
      */
     private boolean isNoPremissionPause;
+    /**
+     * 是否显示底部 布局的按钮
+     */
+    private boolean showAeFlag = false;
 
+    /**
+     * 是否显示Awb的按钮
+     */
+    private boolean showAwbFlag = false;
+    /**
+     * 是否显示 effect 的按钮
+     */
+    private boolean showEffectFlag = false;
+
+    /**
+     * 是否显示 sense 的按钮
+     */
+    private boolean showSenseFlag = false;
 
     @Override
     protected int getLayoutId() {
@@ -184,6 +264,20 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
 
     @Override
     protected void initView() {
+        // 将底部布局 依次添加到 列表中
+        mLayoutList.clear();
+        mLayoutList.add(mLayoutBottom);
+        mLayoutList.add(layoutAe);
+        mLayoutList.add(layoutAwb);
+        mLayoutList.add(llEffect);
+        mLayoutList.add(llSense);
+        // 初始化 切换动画
+        mShowAction = new TranslateAnimation(Animation.RELATIVE_TO_SELF,
+                0.0f, Animation.RELATIVE_TO_SELF, 0.0f,
+                Animation.RELATIVE_TO_SELF, -1.0f,
+                Animation.RELATIVE_TO_SELF, 0.0f);
+        mShowAction.setDuration(100);
+
         mVideoPlayer = new VideoPlayer();
         //设置时间戳回调
         mVideoPlayer.setPlaySeekTimeListener(this);
@@ -204,6 +298,8 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
     protected void initData() {
         mCameraPath = cameraHelper.getPhotoFilePath();
         mVideoPath = cameraHelper.getVideoFilePath();
+
+        sbAe.setOnSeekBarChangeListener(new CameraSeekBarListener());
     }
 
     /**
@@ -272,6 +368,10 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
         List<String> menus = new ArrayList<>();
         menus.add("拍照");
         menus.add("录像");
+        menus.add("曝光");
+        menus.add("白平衡");
+        menus.add("效果");
+        menus.add("感觉");
 
         mMenuAdapter = new MenuAdapter(this, menus, videoMenu);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
@@ -426,8 +526,10 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
 
     /**
      * 传感器继承方法 重力发生改变
-     * 根据重力方向 动态旋转拍照图片角度
+     * 根据重力方向 动态旋转拍照图片角度(暂时关闭该方法)
      *
+     * 使用以下方法
+     * int rotation = getWindowManager().getDefaultDisplay().getRotation();
      * @param event event
      */
     @Override
@@ -436,18 +538,15 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
             float x = event.values[0];
             float y = event.values[1];
             float z = event.values[2];
+//            Log.e(TAG, "onSensorChanged: x: " + x +"   y: "+y +"  z : "+z);
             if (z > 55.0f) {
-                //向右横屏
-                cameraHelper.setDeviceRotation(1);
-            } else if (z < -55.0f) {
                 //向左横屏
-                cameraHelper.setDeviceRotation(3);
+            } else if (z < -55.0f) {
+                //向右横屏
             } else if (y > 60.0f) {
                 //是倒竖屏
-                cameraHelper.setDeviceRotation(2);
             } else {
                 //正竖屏
-                cameraHelper.setDeviceRotation(0);
             }
         }
         if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
@@ -556,15 +655,46 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
      */
     @Override
     public void selectedPositionChanged(int pos) {
-        if (pos == 0) {
-            NOW_MODE = AppConstant.VIDEO_TAKE_PHOTO;
-            cameraHelper.setCameraState(ICamera2.CameraMode.TAKE_PHOTO);
-            videoHintText.setText("点击拍照");
-        }
-        if (pos == 1) {
-            NOW_MODE = AppConstant.VIDEO_RECORD_MODE;
-            cameraHelper.setCameraState(ICamera2.CameraMode.RECORD_VIDEO);
-            videoHintText.setText("点击录像");
+        Log.e(TAG, "selectedPositionChanged: "+pos);
+        switch (pos){
+            case 0:{
+                showLayout(0, false);
+                NOW_MODE = AppConstant.VIDEO_TAKE_PHOTO;
+                cameraHelper.setCameraState(ICamera2.CameraMode.TAKE_PHOTO);
+                videoHintText.setText("点击拍照");
+                break;
+            }
+            case 1:{
+                showLayout(0, false);
+                NOW_MODE = AppConstant.VIDEO_RECORD_MODE;
+                cameraHelper.setCameraState(ICamera2.CameraMode.RECORD_VIDEO);
+                videoHintText.setText("点击录像");
+                break;
+            }
+            // 调整 曝光
+            case 2:{
+                showAeFlag = !showAeFlag;
+                showLayout(SHOW_AE, true);
+                break;
+            }
+            // 调整 白平衡
+            case 3:{
+                showAwbFlag = !showAwbFlag;
+                showLayout(SHOW_AWB, true);
+                break;
+            }
+            // 调整 效果
+            case 4:{
+                showEffectFlag = !showEffectFlag;
+                showLayout(SHOW_EFFECT, showEffectFlag);
+                break;
+            }
+            // 调整 感觉
+            case 5:{
+                showSenseFlag = !showSenseFlag;
+                showLayout(SHOW_SENSE, showSenseFlag);
+                break;
+            }
         }
     }
 
@@ -575,7 +705,7 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
     private void recordCountDown() {
         videoTime.setVisibility(View.VISIBLE);
         videoRecordSeekBar.setVisibility(View.VISIBLE);
-        final int count = 15;
+        final int count = 10;
         mDisposable = Observable.interval(1, 1, TimeUnit.SECONDS)
                 .take(count + 1)
                 .map(new Function<Long, Long>() {
@@ -624,6 +754,8 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
         }
         //拍照
         if (NOW_MODE == AppConstant.VIDEO_TAKE_PHOTO && mCameraPath!=null) {
+            int rotation = getWindowManager().getDefaultDisplay().getRotation();
+            cameraHelper.setDeviceRotation(rotation);
             cameraHelper.takePhone(mCameraPath, ICamera2.MediaType.JPEG);
         }
         //录制视频
@@ -882,7 +1014,7 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
      * 添加 延时消失任务
      */
     private void imageFoucesDelayedHind() {
-        videoFouces.postDelayed(mImageFoucesRunnable, 1000);
+        videoFouces.postDelayed(mImageFoucesRunnable, 500);
     }
 
     /**
@@ -1116,4 +1248,93 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
         videoSeekTime.setVisibility(View.VISIBLE);
     }
 
+    /**
+     * 底部 布局集合
+     */
+    private List<View> mLayoutList = new LinkedList<>();
+    /**
+     * visible与invisible之间切换的动画
+     */
+    private TranslateAnimation mShowAction;
+
+    /**
+     * 显示和隐藏控件
+     *
+     * @param showWhat
+     * @param showOrNot
+     */
+    private void showLayout(int showWhat, boolean showOrNot) {
+        View v = mLayoutList.get(showWhat);
+        if (showOrNot) {
+            //全部隐藏但是AF/AE的显示出来
+            for (int i = 0; i < mLayoutBottom.getChildCount(); i++) {
+                if (mLayoutBottom.getChildAt(i).getVisibility() == View.VISIBLE) {
+                    mLayoutBottom.getChildAt(i).setVisibility(View.GONE);
+                }
+            }
+            v.startAnimation(mShowAction);
+            v.setVisibility(View.VISIBLE);
+        } else {
+            //全部隐藏但是capture的显示出来
+            for (int i = 0; i < mLayoutBottom.getChildCount(); i++) {
+                if (mLayoutBottom.getChildAt(i).getVisibility() == View.VISIBLE) {
+                    mLayoutBottom.getChildAt(i).setVisibility(View.GONE);
+                }
+            }
+            rlCamera.startAnimation(mShowAction);
+            rlCamera.setVisibility(View.VISIBLE);
+        }
+    }
+
+    /**
+     * 曝光 ae 滑动监听事件
+     */
+    private class CameraSeekBarListener implements SeekBar.OnSeekBarChangeListener {
+
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            switch (seekBar.getId()){
+                case R.id.sb_ae: {
+                    if (switchAe.isChecked()) {
+                        // 曝光增益
+                        if (cameraHelper.getRange1() == null) {
+                            break;
+                        }
+                        Log.e(TAG, "曝光增益范围：" + cameraHelper.getRange1().toString());
+                        int maxmax = cameraHelper.getRange1().getUpper();
+                        int minmin = cameraHelper.getRange1().getLower();
+                        int all = maxmax - minmin;
+                        int time = 100 / all;
+                        int ae = ((progress / time) - maxmax) > maxmax ? maxmax :
+                                ((progress / time) - maxmax) < minmin ? minmin : ((progress / time) - maxmax);
+                        cameraHelper.setAERegions(ae);
+                        tvSbTxt.setText("曝光增益：" + ae);
+                    } else {
+                        // 曝光时间
+                        if (cameraHelper.getEtr() == null) {
+                            tvSbTxt.setText("获取曝光时间失败");
+                            break;
+                        }
+                        Log.e(TAG, "曝光时间范围：" + cameraHelper.getEtr().toString());
+                        long max = cameraHelper.getEtr().getUpper();
+                        long min = cameraHelper.getEtr().getLower();
+                        long ae = ((progress * (max - min)) / 100 + min);
+                        cameraHelper.setAeTime(ae);
+                        tvSbTxt.setText("曝光时间：" + ae);
+                    }
+                    break;
+                }
+            }
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+
+        }
+    }
 }

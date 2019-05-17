@@ -31,6 +31,7 @@ import android.os.HandlerThread;
 import android.support.annotation.RequiresApi;
 import android.support.v4.content.FileProvider;
 import android.util.Log;
+import android.util.Range;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.Surface;
@@ -106,6 +107,11 @@ public class CameraHelper implements ICamera2 {
     private Size mVideoSize;
 
     private Context mContext;
+
+    /**
+     * 相机 曝光 范围
+     */
+    private Range<Integer> range1;
 
     /**
      * 需要打开的摄像头id
@@ -301,6 +307,10 @@ public class CameraHelper implements ICamera2 {
             for (String cameraId : mCameraIds) {
                 mCharacteristics = mCameraManager.getCameraCharacteristics(cameraId);
                 Integer facing = mCharacteristics.get(CameraCharacteristics.LENS_FACING);
+                // 曝光增益 范围
+                range1 = mCharacteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_RANGE);
+                //获取曝光时间
+                etr = mCharacteristics.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
                 if (facing != null && facing != cameraTypeId) {
                     continue;
                 }
@@ -1327,4 +1337,32 @@ public class CameraHelper implements ICamera2 {
             return Uri.fromFile(file);
         }
     }
+
+    public Range<Integer> getRange1 (){
+        return range1;
+    }
+
+    /**
+     * 设置ae 属性
+     */
+    public void setAERegions(int ae){
+        mPreviewBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, ae);
+    }
+
+    /**
+     * 曝光时间
+     */
+    private Range<Long> etr;
+
+    public Range<Long> getEtr(){
+        return etr;
+    }
+
+    /**
+     * 设置ae 属性
+     */
+    public void setAeTime(long aeTime){
+        mPreviewBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, aeTime);
+    }
+
 }
