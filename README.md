@@ -1,6 +1,10 @@
 # SunCamera
 一个自定义 camera
 
+# 感谢
+
+https://github.com/chensowf/Camera   录像代码部分参考和学习。感谢开源
+
 目前 拍照 摄像界面 效果界面主要 在 CameraVideoActivity 界面中。
 
 ![image](https://github.com/yangmingchuan/CameraMaster/blob/5d92dda84ff32038e7abe94a7a15c40eea7f1a66/app/src/main/res/drawable-v24/64F105A2D530CDE27A0F21CBC6C0B877.gif)
