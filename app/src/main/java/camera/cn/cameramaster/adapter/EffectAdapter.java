@@ -25,11 +25,9 @@ import camera.cn.cameramaster.R;
 
 public class EffectAdapter extends RecyclerView.Adapter<EffectAdapter.EffectViewHolder> {
     private LayoutInflater mLayoutInflater;
-    private Context mContext;
     private String[] effectArr;
 
     public EffectAdapter(Context mContext,String[] arr) {
-        this.mContext = mContext;
         this.effectArr = arr;
         mLayoutInflater = LayoutInflater.from(mContext);
     }
@@ -58,8 +56,6 @@ public class EffectAdapter extends RecyclerView.Adapter<EffectAdapter.EffectView
             super(view);
             ButterKnife.bind(this, view);
             view.setOnClickListener(this);
-
-            Log.e("NormalTextViewHolder", "onClick--> position = " + getPosition());
         }
 
         @Override
@@ -70,16 +66,12 @@ public class EffectAdapter extends RecyclerView.Adapter<EffectAdapter.EffectView
         }
     }
 
-    public EffectOnItemClickListener effectOnItemClickListener;
+    private EffectOnItemClickListener effectOnItemClickListener;
 
     public interface EffectOnItemClickListener {
 
         void itemOnClick(int position);
 
-    }
-
-    public EffectOnItemClickListener getEffectOnItemClickListener() {
-        return effectOnItemClickListener;
     }
 
     public void setEffectOnItemClickListener(EffectOnItemClickListener effectOnItemClickListener) {

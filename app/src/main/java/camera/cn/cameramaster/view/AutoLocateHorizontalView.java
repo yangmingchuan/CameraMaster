@@ -20,7 +20,7 @@ public class AutoLocateHorizontalView extends RecyclerView {
     /**
      * 一个屏幕中显示多少个item，必须为奇数
      */
-    private int itemCount = 7;
+    private int itemCount = 5;
     /**
      * 初始时选中的位置
      */

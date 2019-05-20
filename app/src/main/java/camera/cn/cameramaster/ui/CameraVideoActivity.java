@@ -10,6 +10,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.media.MediaRecorder;
 import android.net.Uri;
@@ -23,6 +24,7 @@ import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
 import android.view.animation.TranslateAnimation;
@@ -43,8 +45,11 @@ import java.util.concurrent.TimeUnit;
 import butterknife.BindView;
 import butterknife.OnClick;
 import camera.cn.cameramaster.R;
+import camera.cn.cameramaster.adapter.EffectAdapter;
 import camera.cn.cameramaster.adapter.MenuAdapter;
+import camera.cn.cameramaster.adapter.SenseAdapter;
 import camera.cn.cameramaster.base.BaseActivity;
+import camera.cn.cameramaster.view.AwbSeekBarChangeListener;
 import camera.cn.cameramaster.util.AppConstant;
 import camera.cn.cameramaster.util.cameravideo.CameraHelper;
 import camera.cn.cameramaster.util.cameravideo.ICamera2;
@@ -52,6 +57,7 @@ import camera.cn.cameramaster.util.cameravideo.IVideoControl;
 import camera.cn.cameramaster.util.cameravideo.VideoPlayer;
 import camera.cn.cameramaster.view.AutoFitTextureView;
 import camera.cn.cameramaster.view.AutoLocateHorizontalView;
+import camera.cn.cameramaster.view.AwbSeekBar;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
@@ -159,6 +165,9 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
     @BindView(R.id.sb_ae)
     SeekBar sbAe;
 
+    @BindView(R.id.sb_awb)
+    AwbSeekBar sbAwb;
+
     /**
      * awb
      */
@@ -238,24 +247,14 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
      * 是否有拍照权限
      */
     private boolean isNoPremissionPause;
-    /**
-     * 是否显示底部 布局的按钮
-     */
-    private boolean showAeFlag = false;
 
     /**
-     * 是否显示Awb的按钮
+     * 定义文字动画
      */
-    private boolean showAwbFlag = false;
-    /**
-     * 是否显示 effect 的按钮
-     */
-    private boolean showEffectFlag = false;
-
-    /**
-     * 是否显示 sense 的按钮
-     */
-    private boolean showSenseFlag = false;
+    private AlphaAnimation mAlphaInAnimation;
+    private AlphaAnimation mAlphaOutAnimation;
+    private SenseAdapter sAdapter;
+    private EffectAdapter effectAdapter;
 
     @Override
     protected int getLayoutId() {
@@ -292,6 +291,27 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
             initVideoMode();
         }
         mFoucesAnimation = new FoucesAnimation();
+        // 淡入动画
+        mAlphaInAnimation = new AlphaAnimation(0.0f, 1.0f);
+        mAlphaInAnimation.setDuration(500);
+        // 淡出动画
+        mAlphaOutAnimation = new AlphaAnimation(1.0f, 0.0f);
+        mAlphaOutAnimation.setDuration(500);
+
+        sbAwb.setmOnAwbSeekBarChangeListener(cameraHelper);
+
+        LinearLayoutManager ms = new LinearLayoutManager(this);
+        ms.setOrientation(LinearLayoutManager.HORIZONTAL);
+        LinearLayoutManager ms1 = new LinearLayoutManager(this);
+        ms1.setOrientation(LinearLayoutManager.HORIZONTAL);
+        evSenseList.setLayoutManager(ms);
+        evEffectList.setLayoutManager(ms1);
+        sAdapter = new SenseAdapter(this, AppConstant.senseArr);
+        effectAdapter = new EffectAdapter(this,AppConstant.effectArr);
+        evSenseList.setAdapter(sAdapter);
+        evEffectList.setAdapter(effectAdapter);
+        // rv 点击事件
+        initListener();
     }
 
     @Override
@@ -364,6 +384,7 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
         cameraHelper = new CameraHelper(this);
         cameraHelper.setTakePhotoListener(this);
         cameraHelper.setCameraReady(this);
+        cameraHelper.setShowTextView(tvSbTxt);
         mVideoPlayer.setLoopPlay(true);
         List<String> menus = new ArrayList<>();
         menus.add("拍照");
@@ -673,26 +694,22 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
             }
             // 调整 曝光
             case 2:{
-                showAeFlag = !showAeFlag;
                 showLayout(SHOW_AE, true);
                 break;
             }
             // 调整 白平衡
             case 3:{
-                showAwbFlag = !showAwbFlag;
                 showLayout(SHOW_AWB, true);
                 break;
             }
             // 调整 效果
             case 4:{
-                showEffectFlag = !showEffectFlag;
-                showLayout(SHOW_EFFECT, showEffectFlag);
+                showLayout(3, true);
                 break;
             }
             // 调整 感觉
             case 5:{
-                showSenseFlag = !showSenseFlag;
-                showLayout(SHOW_SENSE, showSenseFlag);
+                showLayout(4, true);
                 break;
             }
         }
@@ -1329,12 +1346,118 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
 
         @Override
         public void onStartTrackingTouch(SeekBar seekBar) {
-
+            tvSbTxt.setVisibility(View.VISIBLE);
+            tvSbTxt.startAnimation(mAlphaInAnimation);
         }
 
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
-
+            tvSbTxt.startAnimation(mAlphaOutAnimation);
+            tvSbTxt.setVisibility(View.INVISIBLE);
         }
+    }
+
+    /**
+     * rv点击事件 初始化
+     */
+    private void initListener() {
+        sAdapter.setSenseOnItemClickListener(new SenseAdapter.SenseOnItemClickListener() {
+            @Override
+            public void itemOnClick(int position) {
+                cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_USE_SCENE_MODE);
+                switch (position) {
+                    case 0:
+                        cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_SCENE_MODE, CameraMetadata.CONTROL_SCENE_MODE_DISABLED);
+                        break;
+                    case 1:
+                        cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_SCENE_MODE, CameraMetadata.CONTROL_SCENE_MODE_FACE_PRIORITY);
+                        break;
+                    case 2:
+                        cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_SCENE_MODE, CameraMetadata.CONTROL_SCENE_MODE_ACTION);
+                        break;
+                    case 3:
+                        cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_SCENE_MODE, CameraMetadata.CONTROL_SCENE_MODE_PORTRAIT);
+                        break;
+                    case 4:
+                        cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_SCENE_MODE, CameraMetadata.CONTROL_SCENE_MODE_LANDSCAPE);
+                        break;
+                    case 5:
+                        cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_SCENE_MODE, CameraMetadata.CONTROL_SCENE_MODE_NIGHT);
+                        break;
+                    case 6:
+                        cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_SCENE_MODE, CameraMetadata.CONTROL_SCENE_MODE_NIGHT_PORTRAIT);
+                        break;
+                    case 7:
+                        cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_SCENE_MODE, CameraMetadata.CONTROL_SCENE_MODE_THEATRE);
+                        break;
+                    case 8:
+                        cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_SCENE_MODE, CameraMetadata.CONTROL_SCENE_MODE_BEACH);
+                        break;
+                    case 9:
+                        cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_SCENE_MODE, CameraMetadata.CONTROL_SCENE_MODE_SNOW);
+                        break;
+                    case 10:
+                        cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_SCENE_MODE, CameraMetadata.CONTROL_SCENE_MODE_SUNSET);
+                        break;
+                    case 11:
+                        cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_SCENE_MODE, CameraMetadata.CONTROL_SCENE_MODE_STEADYPHOTO);
+                        break;
+                    case 12:
+                        cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_SCENE_MODE, CameraMetadata.CONTROL_SCENE_MODE_FIREWORKS);
+                        break;
+                    case 13:
+                        cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_SCENE_MODE, CameraMetadata.CONTROL_SCENE_MODE_SPORTS);
+                        break;
+                    case 14:
+                        cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_SCENE_MODE, CameraMetadata.CONTROL_SCENE_MODE_PARTY);
+                        break;
+                    case 15:
+                        cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_SCENE_MODE, CameraMetadata.CONTROL_SCENE_MODE_CANDLELIGHT);
+                        break;
+                    case 16:
+                        cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_SCENE_MODE, CameraMetadata.CONTROL_SCENE_MODE_BARCODE);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
+
+        effectAdapter.setEffectOnItemClickListener(new EffectAdapter.EffectOnItemClickListener() {
+            @Override
+            public void itemOnClick(int position) {
+                switch (position) {
+                    case 0:
+                        cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_EFFECT_MODE, CameraMetadata.CONTROL_EFFECT_MODE_AQUA);
+                        break;
+                    case 1:
+                        cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_EFFECT_MODE, CameraMetadata.CONTROL_EFFECT_MODE_BLACKBOARD);
+                        break;
+                    case 2:
+                        cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_EFFECT_MODE, CameraMetadata.CONTROL_EFFECT_MODE_MONO);
+                        break;
+                    case 3:
+                        cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_EFFECT_MODE, CameraMetadata.CONTROL_EFFECT_MODE_NEGATIVE);
+                        break;
+                    case 4:
+                        cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_EFFECT_MODE, CameraMetadata.CONTROL_EFFECT_MODE_POSTERIZE);
+                        break;
+                    case 5:
+                        cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_EFFECT_MODE, CameraMetadata.CONTROL_EFFECT_MODE_SEPIA);
+                        break;
+                    case 6:
+                        cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_EFFECT_MODE, CameraMetadata.CONTROL_EFFECT_MODE_SOLARIZE);
+                        break;
+                    case 7:
+                        cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_EFFECT_MODE, CameraMetadata.CONTROL_EFFECT_MODE_WHITEBOARD);
+                        break;
+                    case 8:
+                        cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_EFFECT_MODE, CameraMetadata.CONTROL_EFFECT_MODE_OFF);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
     }
 }

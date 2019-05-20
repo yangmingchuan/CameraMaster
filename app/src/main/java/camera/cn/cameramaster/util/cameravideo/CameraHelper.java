@@ -36,6 +36,11 @@ import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.Surface;
 import android.view.TextureView;
+import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.SeekBar;
+import android.widget.TextView;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -48,7 +53,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import camera.cn.cameramaster.R;
 import camera.cn.cameramaster.view.AutoFitTextureView;
+import camera.cn.cameramaster.view.AwbSeekBar;
 
 
 /**
@@ -58,7 +65,7 @@ import camera.cn.cameramaster.view.AutoFitTextureView;
  */
 
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-public class CameraHelper implements ICamera2 {
+public class CameraHelper implements ICamera2, AwbSeekBar.OnAwbSeekBarChangeListener {
 
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
 
@@ -68,6 +75,12 @@ public class CameraHelper implements ICamera2 {
         ORIENTATIONS.append(Surface.ROTATION_180, 270);
         ORIENTATIONS.append(Surface.ROTATION_270, 180);
     }
+
+    /**
+     * 淡入 淡出 动画
+     */
+    private final Animation mAlphaInAnimation;
+    private final Animation mAlphaOutAnimation;
 
     /**
      * 设备旋转方向
@@ -213,6 +226,19 @@ public class CameraHelper implements ICamera2 {
             e.printStackTrace();
         }
         mFocusRect = new Rect();
+
+        mAlphaInAnimation = AnimationUtils.loadAnimation(mContext, R.anim.alpha_in);
+        mAlphaOutAnimation = AnimationUtils.loadAnimation(mContext, R.anim.alpha_out);
+    }
+
+    private TextView mTextView;
+
+    /**
+     * 状态文字 赋值
+     * @param mTextView tv
+     */
+    public void setShowTextView(TextView mTextView){
+        this.mTextView = mTextView;
     }
 
 
@@ -991,11 +1017,120 @@ public class CameraHelper implements ICamera2 {
     /**
      * 设置当前相机位置
      *
-     * @param rotation
+     * @param rotation 角度
      */
     public void setDeviceRotation(int rotation) {
         this.mDeviceRotation = rotation;
     }
+
+
+    /**
+     * seekBar 滑动监听事件
+     */
+    @Override
+    public void doInProgress1() {
+        mTextView.setText("自动");
+        mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_AUTO);
+        updatePreview();
+    }
+
+    @Override
+    public void doInProgress2() {
+        mTextView.setText("多云");
+        mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_CLOUDY_DAYLIGHT);
+        updatePreview();
+    }
+
+    @Override
+    public void doInProgress3() {
+        mTextView.setText("白天");
+        mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_DAYLIGHT);
+        updatePreview();
+    }
+
+    @Override
+    public void doInProgress4() {
+        mTextView.setText("日光灯");
+        mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_FLUORESCENT);
+        updatePreview();
+    }
+
+    @Override
+    public void doInProgress5() {
+        mTextView.setText("白炽灯");
+        mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_INCANDESCENT);
+        updatePreview();
+    }
+
+    @Override
+    public void doInProgress6() {
+        mTextView.setText("阴影");
+        mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_SHADE);
+        updatePreview();
+    }
+
+    @Override
+    public void doInProgress7() {
+        mTextView.setText("黄昏");
+        mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_TWILIGHT);
+        updatePreview();
+    }
+
+    @Override
+    public void doInProgress8() {
+        mTextView.setText("暖光");
+        mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_WARM_FLUORESCENT);
+        updatePreview();
+    }
+
+    @Override
+    public void onStopTrackingTouch(int num) {
+        switch (num) {
+            case 0:
+                mTextView.setText("自动");
+                mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_AUTO);
+                break;
+            case 10:
+                mTextView.setText("多云");
+                mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_CLOUDY_DAYLIGHT);
+                break;
+            case 20:
+                mTextView.setText("白天");
+                mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_DAYLIGHT);
+                break;
+            case 30:
+                mTextView.setText("日光灯");
+                mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_FLUORESCENT);
+                break;
+            case 40:
+                mTextView.setText("白炽灯");
+                mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_INCANDESCENT);
+                break;
+            case 50:
+                mTextView.setText("阴影");
+                mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_SHADE);
+                break;
+            case 60:
+                mTextView.setText("黄昏");
+                mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_TWILIGHT);
+                break;
+            case 70:
+                mTextView.setText("暖光");
+                mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_WARM_FLUORESCENT);
+                break;
+        }
+        updatePreview();
+        mTextView.startAnimation(mAlphaOutAnimation);
+        mTextView.setVisibility(View.INVISIBLE);
+    }
+
+    @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
+        mTextView.setVisibility(View.VISIBLE);
+        mTextView.startAnimation(mAlphaInAnimation);
+    }
+
+
 
     /**
      * 异步保存照片
@@ -1347,6 +1482,7 @@ public class CameraHelper implements ICamera2 {
      */
     public void setAERegions(int ae){
         mPreviewBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, ae);
+        updatePreview();
     }
 
     /**
@@ -1363,6 +1499,18 @@ public class CameraHelper implements ICamera2 {
      */
     public void setAeTime(long aeTime){
         mPreviewBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, aeTime);
+        updatePreview();
+    }
+
+    /**
+     * 设置 mPreviewBuilder 种类
+     * @param key CaptureRequest
+     * @param value v
+     * @param <T>
+     */
+    public <T> void setCameraBuilerMode(CaptureRequest.Key<T> key, T value) {
+        mPreviewBuilder.set(key, value);
+        updatePreview();
     }
 
 }

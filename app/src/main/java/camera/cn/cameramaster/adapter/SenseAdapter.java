@@ -25,12 +25,9 @@ import camera.cn.cameramaster.R;
 
 public class SenseAdapter extends RecyclerView.Adapter<SenseAdapter.EffectViewHolder> {
     private LayoutInflater mLayoutInflater;
-    private Context mContext;
-
     private String[] senseArr;
 
     public SenseAdapter(Context mContext,String[] arr) {
-        this.mContext = mContext;
         this.senseArr = arr;
         mLayoutInflater = LayoutInflater.from(mContext);
     }
@@ -66,20 +63,15 @@ public class SenseAdapter extends RecyclerView.Adapter<SenseAdapter.EffectViewHo
             if (senseOnItemClickListener != null) {
                 senseOnItemClickListener.itemOnClick(getPosition());
             }
-            Log.e("NormalTextViewHolder", "onClick--> position = " + getPosition());
         }
     }
 
-    public SenseOnItemClickListener senseOnItemClickListener;
+    private SenseOnItemClickListener senseOnItemClickListener;
 
     public interface SenseOnItemClickListener {
 
         void itemOnClick(int position);
 
-    }
-
-    public SenseOnItemClickListener getSenseOnItemClickListener() {
-        return senseOnItemClickListener;
     }
 
     public void setSenseOnItemClickListener(SenseOnItemClickListener senseOnItemClickListener) {

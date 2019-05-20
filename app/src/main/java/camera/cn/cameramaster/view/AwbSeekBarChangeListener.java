@@ -1,4 +1,4 @@
-package camera.cn.cameramaster.listener;
+package camera.cn.cameramaster.view;
 
 import android.content.Context;
 import android.hardware.camera2.CameraAccessException;
