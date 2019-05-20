@@ -1,6 +1,10 @@
 # SunCamera
 一个自定义 camera
 
+![image](https://github.com/yangmingchuan/CameraMaster/blob/5d92dda84ff32038e7abe94a7a15c40eea7f1a66/app/src/main/res/drawable-v24/64F105A2D530CDE27A0F21CBC6C0B877.gif)
+
+![image](https://github.com/yangmingchuan/CameraMaster/blob/5d92dda84ff32038e7abe94a7a15c40eea7f1a66/app/src/main/res/drawable-v24/6941AEB6B15AD4484CE7F7B62193AC82.gif)
+
 camera+surfaceview 博客地址：https://www.jianshu.com/p/af39024896ce
 
 ![image](https://upload-images.jianshu.io/upload_images/6188347-cd61d9a329522b0a?imageMogr2/auto-orient/)
