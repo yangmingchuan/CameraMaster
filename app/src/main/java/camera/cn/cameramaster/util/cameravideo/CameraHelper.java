@@ -305,6 +305,7 @@ public class CameraHelper implements ICamera2, AwbSeekBar.OnAwbSeekBarChangeList
         );
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @SuppressLint("MissingPermission")
     @Override
     public boolean openCamera(CameraType cameraType) {
@@ -335,6 +336,10 @@ public class CameraHelper implements ICamera2, AwbSeekBar.OnAwbSeekBarChangeList
                 Integer facing = mCharacteristics.get(CameraCharacteristics.LENS_FACING);
                 // 曝光增益 范围
                 range1 = mCharacteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_RANGE);
+
+                Boolean awbAva = mCharacteristics.get(CameraCharacteristics.CONTROL_AWB_LOCK_AVAILABLE);
+                //获取 awb 模式列表
+                int[] awblock = mCharacteristics.get(CameraCharacteristics.CONTROL_AWB_AVAILABLE_MODES);
                 //获取曝光时间
                 etr = mCharacteristics.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
                 if (facing != null && facing != cameraTypeId) {
@@ -406,6 +411,7 @@ public class CameraHelper implements ICamera2, AwbSeekBar.OnAwbSeekBarChangeList
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public boolean switchCamera(CameraType cameraType) {
         closeCamera();

@@ -365,6 +365,28 @@
 
         </LinearLayout>
 
+        <LinearLayout
+            android:id="@+id/layout_setting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <SeekBar
+                android:id="@+id/awb_seek_bar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top"
+                android:max="100000"
+                android:maxHeight="3dp"
+                android:minHeight="3dp"
+                android:splitTrack="false"
+                android:visibility="visible" />
+
+        </LinearLayout>
+
     </RelativeLayout>
 
     <TextView

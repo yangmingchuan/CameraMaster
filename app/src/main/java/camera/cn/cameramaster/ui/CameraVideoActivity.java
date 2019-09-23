@@ -12,9 +12,11 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.params.RggbChannelVector;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Looper;
 import android.support.annotation.RequiresApi;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
@@ -76,7 +78,7 @@ import static camera.cn.cameramaster.util.AppConstant.SHOW_SENSE;
  * @date 2019年5月7日 13:49:17
  */
 
-@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+@RequiresApi(api = Build.VERSION_CODES.M)
 public class CameraVideoActivity extends BaseActivity implements IVideoControl.PlaySeekTimeListener,
         IVideoControl.PlayStateListener, ICamera2.TakePhotoListener,
         SensorEventListener, ICamera2.CameraReady, AutoLocateHorizontalView.OnSelectedPositionChangedListener {
@@ -158,12 +160,23 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
     LinearLayout llEffect;
     @BindView(R.id.rv_effect_list)
     RecyclerView evEffectList;
+    /**
+     * sense 布局
+     */
     @BindView(R.id.layout_sense)
     LinearLayout llSense;
     @BindView(R.id.rv_sense_list)
     RecyclerView evSenseList;
     @BindView(R.id.sb_ae)
     SeekBar sbAe;
+
+    /**
+     * awb 手动设置布局
+     */
+    @BindView(R.id.layout_setting)
+    LinearLayout llAWBSetting;
+    @BindView(R.id.awb_seek_bar)
+    SeekBar sbAWB;
 
     @BindView(R.id.sb_awb)
     AwbSeekBar sbAwb;
@@ -255,6 +268,97 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
     private AlphaAnimation mAlphaOutAnimation;
     private SenseAdapter sAdapter;
     private EffectAdapter effectAdapter;
+    private Runnable mImageFoucesRunnable = new Runnable() {
+        @Override
+        public void run() {
+            videoFouces.setVisibility(View.GONE);
+        }
+    };
+    /**
+     * 3s后隐藏的runnable
+     */
+    private Runnable SeekBarLayoutRunnalbe = new Runnable() {
+        @Override
+        public void run() {
+            videoScaleBarLayout.setVisibility(View.GONE);
+        }
+    };
+    /**
+     * 视频播放模式控件隐藏
+     */
+    private Runnable mHindViewRunnable = new Runnable() {
+        @Override
+        public void run() {
+            hindPlayView();
+        }
+    };
+    /**
+     * 底部 布局集合
+     */
+    private List<View> mLayoutList = new LinkedList<>();
+    /**
+     * visible与invisible之间切换的动画
+     */
+    private TranslateAnimation mShowAction;
+
+    /**
+     * 设置 rgb 色域
+     * @param whiteBalance 0- 100
+     * @return RggbChannelVector
+     */
+    public static RggbChannelVector colorTemperature(int whiteBalance) {
+        float temperature = whiteBalance/100;
+        float red;
+        float green;
+        float blue;
+
+        //Calculate red
+        if (temperature <= 66)
+            red = 255;
+        else {
+            red = temperature - 60;
+            red = (float) (329.698727446 * (Math.pow((double) red, -0.1332047592)));
+            if (red < 0)
+                red = 0;
+            if (red > 255)
+                red = 255;
+        }
+
+
+        //Calculate green
+        if (temperature <= 66) {
+            green = temperature;
+            green = (float) (99.4708025861 * Math.log(green) - 161.1195681661);
+            if (green < 0)
+                green = 0;
+            if (green > 255)
+                green = 255;
+        } else {
+            green = temperature - 60;
+            green = (float) (288.1221695283 * (Math.pow((double) green, -0.0755148492)));
+            if (green < 0)
+                green = 0;
+            if (green > 255)
+                green = 255;
+        }
+
+        //calculate blue
+        if (temperature >= 66)
+            blue = 255;
+        else if (temperature <= 19)
+            blue = 0;
+        else {
+            blue = temperature - 10;
+            blue = (float) (138.5177312231 * Math.log(blue) - 305.0447927307);
+            if (blue < 0)
+                blue = 0;
+            if (blue > 255)
+                blue = 255;
+        }
+
+        Log.e(TAG, "red=" + red + ", green=" + green + ", blue=" + blue + ", paroess:"+whiteBalance);
+        return new RggbChannelVector((red/255) * 2, (green/255), (green/255), (blue/255) * 2);
+    }
 
     @Override
     protected int getLayoutId() {
@@ -270,12 +374,15 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
         mLayoutList.add(layoutAwb);
         mLayoutList.add(llEffect);
         mLayoutList.add(llSense);
+        mLayoutList.add(llAWBSetting);
         // 初始化 切换动画
         mShowAction = new TranslateAnimation(Animation.RELATIVE_TO_SELF,
                 0.0f, Animation.RELATIVE_TO_SELF, 0.0f,
                 Animation.RELATIVE_TO_SELF, -1.0f,
                 Animation.RELATIVE_TO_SELF, 0.0f);
         mShowAction.setDuration(100);
+
+        Looper.prepare();
 
         mVideoPlayer = new VideoPlayer();
         //设置时间戳回调
@@ -318,7 +425,7 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
     protected void initData() {
         mCameraPath = cameraHelper.getPhotoFilePath();
         mVideoPath = cameraHelper.getVideoFilePath();
-
+        sbAWB.setOnSeekBarChangeListener(new awbSettingSeekBarListener());
         sbAe.setOnSeekBarChangeListener(new CameraSeekBarListener());
     }
 
@@ -370,6 +477,7 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
     /**
      * 初始化 拍照
      */
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @SuppressLint("ClickableViewAccessibility")
     private void initCameraMode() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) !=
@@ -393,6 +501,7 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
         menus.add("白平衡");
         menus.add("效果");
         menus.add("感觉");
+        menus.add("手动设置");
 
         mMenuAdapter = new MenuAdapter(this, menus, videoMenu);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
@@ -425,7 +534,6 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
         cameraHelper.openCamera(cameraType);
     }
 
-
     /**
      * 初始化 scale seekBar
      */
@@ -454,62 +562,11 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
     }
 
     /**
-     * 横向列表 touch事件 (拍照预览 缩放)
-     */
-    private class HorizontalViewTouchListener implements View.OnTouchListener {
-
-        private long mClickOn;
-        private float mLastX;
-        private float mLastY;
-
-        @Override
-        public boolean onTouch(View view, MotionEvent motionEvent) {
-            switch (motionEvent.getActionMasked()) {
-                case MotionEvent.ACTION_DOWN:
-                    if (motionEvent.getPointerCount() == 1) {
-                        mClickOn = System.currentTimeMillis();
-                        mLastX = motionEvent.getX();
-                        mLastY = motionEvent.getY();
-                    }
-                    break;
-                // 用户两指按下事件
-                case MotionEvent.ACTION_POINTER_DOWN:
-                    mCameraTouch.onScaleStart(motionEvent);
-                    return true;
-                case MotionEvent.ACTION_MOVE:
-                    if (motionEvent.getPointerCount() == 2) {
-                        mCameraTouch.onScale(motionEvent);
-                        return true;
-                    } else {
-                        float x = motionEvent.getX() - mLastX;
-                        float y = motionEvent.getY() - mLastY;
-                        if (Math.abs(x) >= 10 || Math.abs(y) >= 10) {
-                            mClickOn = 0;
-                        }
-                    }
-                    break;
-                case MotionEvent.ACTION_UP:
-                    if (motionEvent.getPointerCount() == 1) {
-                        if ((System.currentTimeMillis() - mClickOn) < 500) {
-                            moveFouces((int) motionEvent.getX(), (int) motionEvent.getY());
-                        }
-                    }
-                    break;
-                case MotionEvent.ACTION_POINTER_UP:
-                    mCameraTouch.onScaleEnd(motionEvent);
-                    return true;
-                default:
-                    break;
-            }
-            return false;
-        }
-    }
-
-    /**
      * 点击事件
      *
      * @param view view
      */
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @OnClick({R.id.video_switch_camera, R.id.video_switch_flash})
     public void cameraOnClickListener(View view) {
         switch (view.getId()) {
@@ -712,6 +769,11 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
                 showLayout(4, true);
                 break;
             }
+            // 调整 感觉
+            case 6:{
+                showLayout(5, true);
+                break;
+            }
         }
     }
 
@@ -877,150 +939,6 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
     }
 
     /**
-     * TextureView 触摸方法
-     */
-    private class CameraTouch {
-        private float mOldScale = 1.0f;
-        private float mScale;
-        private float mSpan = 0;
-        private float mOldSpan;
-        private float mFirstDistance = 0;
-
-        public void onScale(MotionEvent event) {
-            if (event.getPointerCount() == 2) {
-                if (mFirstDistance == 0) {
-                    mFirstDistance = distance(event);
-                }
-
-                float distance = distance(event);
-                float scale;
-                if (distance > mFirstDistance) {
-                    scale = (distance - mFirstDistance) / 80;
-                    scale = scale + mSpan;
-                    mOldSpan = scale;
-                    mScale = scale;
-                } else if (distance < mFirstDistance) {
-                    scale = distance / mFirstDistance;
-                    mOldSpan = scale;
-                    mScale = scale * mOldScale;
-                } else {
-                    return;
-                }
-
-                cameraHelper.cameraZoom(mScale);
-                videoScale.setProgress((int) ((mScale / cameraHelper.getMaxZoom()) * videoScale.getMax()));
-                if (mScale < 1.0f) {
-                    videoScale.setProgress(0);
-                }
-            }
-        }
-
-        /**
-         * scale 开始
-         *
-         * @param event
-         */
-        public void onScaleStart(MotionEvent event) {
-            mFirstDistance = 0;
-            setScaleMax((int) cameraHelper.getMaxZoom());
-            videoScaleBarLayout.setVisibility(View.VISIBLE);
-            removeSeekBarRunnable();
-        }
-
-        /**
-         * scale 结束
-         *
-         * @param event MotionEvent
-         */
-        private void onScaleEnd(MotionEvent event) {
-            if (mScale < 1.0f) {
-                mOldScale = 1.0f;
-            } else if (mScale > cameraHelper.getMaxZoom()) {
-                mOldScale = cameraHelper.getMaxZoom();
-            } else {
-                mOldScale = mScale;
-            }
-            mSpan = mOldSpan;
-
-            if (event != null) {
-                seekBarDelayedHind();
-            }
-        }
-
-        /**
-         * 重置 缩放
-         */
-        public void resetScale() {
-            mOldScale = 1.0f;
-            mSpan = 0f;
-            mFirstDistance = 0f;
-            videoScale.setProgress(0);
-        }
-
-        public void setScale(float scale) {
-            mScale = scale;
-            mOldSpan = scale;
-            onScaleEnd(null);
-        }
-
-        /**
-         * 计算两个手指间的距离
-         *
-         * @param event MotionEvent
-         * @return 距离
-         */
-        private float distance(MotionEvent event) {
-            float dx = event.getX(1) - event.getX(0);
-            float dy = event.getY(1) - event.getY(0);
-            // 使用勾股定理返回两点之间的距离
-            return (float) Math.sqrt(dx * dx + dy * dy);
-        }
-
-        private void setScaleMax(int max) {
-            videoScale.setMax(max * 100);
-        }
-    }
-
-    /**
-     * camera 点击对焦动画
-     */
-    private class FoucesAnimation extends Animation {
-
-        private int width = cameraHelper.dip2px(CameraVideoActivity.this, 150);
-        private int W = cameraHelper.dip2px(CameraVideoActivity.this, 65);
-
-        private int oldMarginLeft;
-        private int oldMarginTop;
-
-        @Override
-        protected void applyTransformation(float interpolatedTime, Transformation t) {
-
-            RelativeLayout.LayoutParams layoutParams =
-                    (RelativeLayout.LayoutParams) videoFouces.getLayoutParams();
-            int w = (int) (width * (1 - interpolatedTime));
-            if (w < W) {
-                w = W;
-            }
-            layoutParams.width = w;
-            layoutParams.height = w;
-            if (w == W) {
-                videoFouces.setLayoutParams(layoutParams);
-                return;
-            }
-            layoutParams.leftMargin = oldMarginLeft - (w / 2);
-            layoutParams.topMargin = oldMarginTop + (w / 8);
-            videoFouces.setLayoutParams(layoutParams);
-        }
-
-        public void setOldMargin(int oldMarginLeft, int oldMarginTop) {
-            this.oldMarginLeft = oldMarginLeft;
-            this.oldMarginTop = oldMarginTop;
-            removeImageFoucesRunnable();
-            imageFoucesDelayedHind();
-        }
-    }
-
-    /**
      * 移除对焦 消失任务
      */
     private void removeImageFoucesRunnable() {
@@ -1044,13 +962,6 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
         isCanHind = false;
     }
 
-    private Runnable mImageFoucesRunnable = new Runnable() {
-        @Override
-        public void run() {
-            videoFouces.setVisibility(View.GONE);
-        }
-    };
-
     /**
      * 移除隐藏 seekBar消失的任务
      */
@@ -1058,16 +969,6 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
         isCanHind = true;
         videoScale.removeCallbacks(SeekBarLayoutRunnalbe);
     }
-
-    /**
-     * 3s后隐藏的runnable
-     */
-    private Runnable SeekBarLayoutRunnalbe = new Runnable() {
-        @Override
-        public void run() {
-            videoScaleBarLayout.setVisibility(View.GONE);
-        }
-    };
 
     /**
      * 显示播放视频 的 确认和删除按钮
@@ -1246,16 +1147,6 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
     }
 
     /**
-     * 视频播放模式控件隐藏
-     */
-    private Runnable mHindViewRunnable = new Runnable() {
-        @Override
-        public void run() {
-            hindPlayView();
-        }
-    };
-
-    /**
      * 显示播放界面的控件出来
      */
     private void showPlayView() {
@@ -1264,15 +1155,6 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
         videoPlay.setVisibility(View.VISIBLE);
         videoSeekTime.setVisibility(View.VISIBLE);
     }
-
-    /**
-     * 底部 布局集合
-     */
-    private List<View> mLayoutList = new LinkedList<>();
-    /**
-     * visible与invisible之间切换的动画
-     */
-    private TranslateAnimation mShowAction;
 
     /**
      * 显示和隐藏控件
@@ -1300,60 +1182,6 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
             }
             rlCamera.startAnimation(mShowAction);
             rlCamera.setVisibility(View.VISIBLE);
-        }
-    }
-
-    /**
-     * 曝光 ae 滑动监听事件
-     */
-    private class CameraSeekBarListener implements SeekBar.OnSeekBarChangeListener {
-
-        @Override
-        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-            switch (seekBar.getId()){
-                case R.id.sb_ae: {
-                    if (switchAe.isChecked()) {
-                        // 曝光增益
-                        if (cameraHelper.getRange1() == null) {
-                            break;
-                        }
-                        Log.e(TAG, "曝光增益范围：" + cameraHelper.getRange1().toString());
-                        int maxmax = cameraHelper.getRange1().getUpper();
-                        int minmin = cameraHelper.getRange1().getLower();
-                        int all = maxmax - minmin;
-                        int time = 100 / all;
-                        int ae = ((progress / time) - maxmax) > maxmax ? maxmax :
-                                ((progress / time) - maxmax) < minmin ? minmin : ((progress / time) - maxmax);
-                        cameraHelper.setAERegions(ae);
-                        tvSbTxt.setText("曝光增益：" + ae);
-                    } else {
-                        // 曝光时间
-                        if (cameraHelper.getEtr() == null) {
-                            tvSbTxt.setText("获取曝光时间失败");
-                            break;
-                        }
-                        Log.e(TAG, "曝光时间范围：" + cameraHelper.getEtr().toString());
-                        long max = cameraHelper.getEtr().getUpper();
-                        long min = cameraHelper.getEtr().getLower();
-                        long ae = ((progress * (max - min)) / 100 + min);
-                        cameraHelper.setAeTime(ae);
-                        tvSbTxt.setText("曝光时间：" + ae);
-                    }
-                    break;
-                }
-            }
-        }
-
-        @Override
-        public void onStartTrackingTouch(SeekBar seekBar) {
-            tvSbTxt.setVisibility(View.VISIBLE);
-            tvSbTxt.startAnimation(mAlphaInAnimation);
-        }
-
-        @Override
-        public void onStopTrackingTouch(SeekBar seekBar) {
-            tvSbTxt.startAnimation(mAlphaOutAnimation);
-            tvSbTxt.setVisibility(View.INVISIBLE);
         }
     }
 
@@ -1459,5 +1287,280 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
                 }
             }
         });
+    }
+
+    /**
+     * 横向列表 touch事件 (拍照预览 缩放)
+     */
+    private class HorizontalViewTouchListener implements View.OnTouchListener {
+
+        private long mClickOn;
+        private float mLastX;
+        private float mLastY;
+
+        @Override
+        public boolean onTouch(View view, MotionEvent motionEvent) {
+            switch (motionEvent.getActionMasked()) {
+                case MotionEvent.ACTION_DOWN:
+                    if (motionEvent.getPointerCount() == 1) {
+                        mClickOn = System.currentTimeMillis();
+                        mLastX = motionEvent.getX();
+                        mLastY = motionEvent.getY();
+                    }
+                    break;
+                // 用户两指按下事件
+                case MotionEvent.ACTION_POINTER_DOWN:
+                    mCameraTouch.onScaleStart(motionEvent);
+                    return true;
+                case MotionEvent.ACTION_MOVE:
+                    if (motionEvent.getPointerCount() == 2) {
+                        mCameraTouch.onScale(motionEvent);
+                        return true;
+                    } else {
+                        float x = motionEvent.getX() - mLastX;
+                        float y = motionEvent.getY() - mLastY;
+                        if (Math.abs(x) >= 10 || Math.abs(y) >= 10) {
+                            mClickOn = 0;
+                        }
+                    }
+                    break;
+                case MotionEvent.ACTION_UP:
+                    if (motionEvent.getPointerCount() == 1) {
+                        if ((System.currentTimeMillis() - mClickOn) < 500) {
+                            moveFouces((int) motionEvent.getX(), (int) motionEvent.getY());
+                        }
+                    }
+                    break;
+                case MotionEvent.ACTION_POINTER_UP:
+                    mCameraTouch.onScaleEnd(motionEvent);
+                    return true;
+                default:
+                    break;
+            }
+            return false;
+        }
+    }
+
+    /**
+     * TextureView 触摸方法
+     */
+    private class CameraTouch {
+        private float mOldScale = 1.0f;
+        private float mScale;
+        private float mSpan = 0;
+        private float mOldSpan;
+        private float mFirstDistance = 0;
+
+        public void onScale(MotionEvent event) {
+            if (event.getPointerCount() == 2) {
+                if (mFirstDistance == 0) {
+                    mFirstDistance = distance(event);
+                }
+
+                float distance = distance(event);
+                float scale;
+                if (distance > mFirstDistance) {
+                    scale = (distance - mFirstDistance) / 80;
+                    scale = scale + mSpan;
+                    mOldSpan = scale;
+                    mScale = scale;
+                } else if (distance < mFirstDistance) {
+                    scale = distance / mFirstDistance;
+                    mOldSpan = scale;
+                    mScale = scale * mOldScale;
+                } else {
+                    return;
+                }
+
+                cameraHelper.cameraZoom(mScale);
+                videoScale.setProgress((int) ((mScale / cameraHelper.getMaxZoom()) * videoScale.getMax()));
+                if (mScale < 1.0f) {
+                    videoScale.setProgress(0);
+                }
+            }
+        }
+
+        /**
+         * scale 开始
+         *
+         * @param event
+         */
+        public void onScaleStart(MotionEvent event) {
+            mFirstDistance = 0;
+            setScaleMax((int) cameraHelper.getMaxZoom());
+            videoScaleBarLayout.setVisibility(View.VISIBLE);
+            removeSeekBarRunnable();
+        }
+
+        /**
+         * scale 结束
+         *
+         * @param event MotionEvent
+         */
+        private void onScaleEnd(MotionEvent event) {
+            if (mScale < 1.0f) {
+                mOldScale = 1.0f;
+            } else if (mScale > cameraHelper.getMaxZoom()) {
+                mOldScale = cameraHelper.getMaxZoom();
+            } else {
+                mOldScale = mScale;
+            }
+            mSpan = mOldSpan;
+
+            if (event != null) {
+                seekBarDelayedHind();
+            }
+        }
+
+        /**
+         * 重置 缩放
+         */
+        public void resetScale() {
+            mOldScale = 1.0f;
+            mSpan = 0f;
+            mFirstDistance = 0f;
+            videoScale.setProgress(0);
+        }
+
+        public void setScale(float scale) {
+            mScale = scale;
+            mOldSpan = scale;
+            onScaleEnd(null);
+        }
+
+        /**
+         * 计算两个手指间的距离
+         *
+         * @param event MotionEvent
+         * @return 距离
+         */
+        private float distance(MotionEvent event) {
+            float dx = event.getX(1) - event.getX(0);
+            float dy = event.getY(1) - event.getY(0);
+            // 使用勾股定理返回两点之间的距离
+            return (float) Math.sqrt(dx * dx + dy * dy);
+        }
+
+        private void setScaleMax(int max) {
+            videoScale.setMax(max * 100);
+        }
+    }
+
+    /**
+     * camera 点击对焦动画
+     */
+    private class FoucesAnimation extends Animation {
+
+        private int width = cameraHelper.dip2px(CameraVideoActivity.this, 150);
+        private int W = cameraHelper.dip2px(CameraVideoActivity.this, 65);
+
+        private int oldMarginLeft;
+        private int oldMarginTop;
+
+        @Override
+        protected void applyTransformation(float interpolatedTime, Transformation t) {
+
+            RelativeLayout.LayoutParams layoutParams =
+                    (RelativeLayout.LayoutParams) videoFouces.getLayoutParams();
+            int w = (int) (width * (1 - interpolatedTime));
+            if (w < W) {
+                w = W;
+            }
+            layoutParams.width = w;
+            layoutParams.height = w;
+            if (w == W) {
+                videoFouces.setLayoutParams(layoutParams);
+                return;
+            }
+            layoutParams.leftMargin = oldMarginLeft - (w / 2);
+            layoutParams.topMargin = oldMarginTop + (w / 8);
+            videoFouces.setLayoutParams(layoutParams);
+        }
+
+        public void setOldMargin(int oldMarginLeft, int oldMarginTop) {
+            this.oldMarginLeft = oldMarginLeft;
+            this.oldMarginTop = oldMarginTop;
+            removeImageFoucesRunnable();
+            imageFoucesDelayedHind();
+        }
+    }
+
+    /**
+     * 曝光 ae 滑动监听事件
+     */
+    private class CameraSeekBarListener implements SeekBar.OnSeekBarChangeListener {
+
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            switch (seekBar.getId()){
+                case R.id.sb_ae: {
+                    if (switchAe.isChecked()) {
+                        // 曝光增益
+                        if (cameraHelper.getRange1() == null) {
+                            break;
+                        }
+                        Log.e(TAG, "曝光增益范围：" + cameraHelper.getRange1().toString());
+                        int maxmax = cameraHelper.getRange1().getUpper();
+                        int minmin = cameraHelper.getRange1().getLower();
+                        int all = maxmax - minmin;
+                        int time = 100 / all;
+                        int ae = ((progress / time) - maxmax) > maxmax ? maxmax :
+                                ((progress / time) - maxmax) < minmin ? minmin : ((progress / time) - maxmax);
+                        cameraHelper.setAERegions(ae);
+                        tvSbTxt.setText("曝光增益：" + ae);
+                    } else {
+                        // 曝光时间
+                        if (cameraHelper.getEtr() == null) {
+                            tvSbTxt.setText("获取曝光时间失败");
+                            break;
+                        }
+                        Log.e(TAG, "曝光时间范围：" + cameraHelper.getEtr().toString());
+                        long max = cameraHelper.getEtr().getUpper();
+                        long min = cameraHelper.getEtr().getLower();
+                        long ae = ((progress * (max - min)) / 100 + min);
+                        cameraHelper.setAeTime(ae);
+                        tvSbTxt.setText("曝光时间：" + ae);
+                    }
+                    break;
+                }
+            }
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+            tvSbTxt.setVisibility(View.VISIBLE);
+            tvSbTxt.startAnimation(mAlphaInAnimation);
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+            tvSbTxt.startAnimation(mAlphaOutAnimation);
+            tvSbTxt.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    /**
+     * 手动白平衡 滑动监听事件
+     */
+    private class awbSettingSeekBarListener implements SeekBar.OnSeekBarChangeListener {
+
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_OFF);
+            cameraHelper.setCameraBuilerMode(CaptureRequest.COLOR_CORRECTION_MODE, CaptureRequest.COLOR_CORRECTION_MODE_TRANSFORM_MATRIX);
+            // 小米华为 没有的权限
+            cameraHelper.setCameraBuilerMode(CaptureRequest.COLOR_CORRECTION_GAINS, colorTemperature(progress));
+
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+
+        }
     }
 }
