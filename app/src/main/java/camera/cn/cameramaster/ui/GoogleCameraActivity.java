@@ -747,6 +747,9 @@ public class GoogleCameraActivity extends BaseActivity {
                 //获取曝光时间
                 etr = characteristics.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
 
+
+
+
                 // 静态图像捕获，选择最大可用大小。
                 largest = Collections.max(
                         Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)),

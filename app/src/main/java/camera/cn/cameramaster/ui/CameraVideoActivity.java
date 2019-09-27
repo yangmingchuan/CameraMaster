@@ -382,8 +382,6 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
                 Animation.RELATIVE_TO_SELF, 0.0f);
         mShowAction.setDuration(100);
 
-        Looper.prepare();
-
         mVideoPlayer = new VideoPlayer();
         //设置时间戳回调
         mVideoPlayer.setPlaySeekTimeListener(this);
@@ -1546,10 +1544,11 @@ public class CameraVideoActivity extends BaseActivity implements IVideoControl.P
 
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
             cameraHelper.setCameraBuilerMode(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_OFF);
             cameraHelper.setCameraBuilerMode(CaptureRequest.COLOR_CORRECTION_MODE, CaptureRequest.COLOR_CORRECTION_MODE_TRANSFORM_MATRIX);
             // 小米华为 没有的权限
-            cameraHelper.setCameraBuilerMode(CaptureRequest.COLOR_CORRECTION_GAINS, colorTemperature(progress));
+            cameraHelper.setCameraBuilerMode(CaptureRequest.COLOR_CORRECTION_GAINS, colorTemperature(progress+2000));
 
         }
 

@@ -1,8 +1,10 @@
 package camera.cn.cameramaster.ui;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
@@ -16,6 +18,7 @@ import com.yanzhenjie.permission.Rationale;
 import com.yanzhenjie.permission.RequestExecutor;
 
 import java.io.File;
+import java.lang.reflect.Method;
 import java.util.List;
 
 import butterknife.BindView;
@@ -55,6 +58,25 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void initData() {
         requestPermission();
+        // 设置关闭 移动网络
+        setDataConnectionState(this,false);
+    }
+
+
+    @SuppressLint("WrongConstant")
+    public static void setDataConnectionState(Context cxt, boolean state) {
+        ConnectivityManager connectivityManager = null;
+        Class connectivityManagerClz = null;
+        try {
+            connectivityManager = (ConnectivityManager) cxt
+                    .getSystemService("connectivity");
+            connectivityManagerClz = connectivityManager.getClass();
+            Method method = connectivityManagerClz.getMethod(
+                    "setMobileDataEnabled", new Class[] { boolean.class });
+            method.invoke(connectivityManager, state);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @OnClick({R.id.btn_camera, R.id.btn_camera2, R.id.btn_filter_camera2, R.id.btn_camera2_video})

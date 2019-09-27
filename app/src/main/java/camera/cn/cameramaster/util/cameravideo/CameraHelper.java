@@ -209,6 +209,14 @@ public class CameraHelper implements ICamera2, AwbSeekBar.OnAwbSeekBarChangeList
 
     private Rect mPreviewRect;
     private Rect mFocusRect;
+    /**
+     * iso 范围
+     */
+    private Range<Integer> isoRange;
+
+    public Range<Integer> getIsoRange() {
+        return isoRange;
+    }
 
     /**
      * 根据摄像头管理器获取一个帮助类
@@ -336,16 +344,24 @@ public class CameraHelper implements ICamera2, AwbSeekBar.OnAwbSeekBarChangeList
                 Integer facing = mCharacteristics.get(CameraCharacteristics.LENS_FACING);
                 // 曝光增益 范围
                 range1 = mCharacteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_RANGE);
+                //获取支持的iso范围
+                isoRange = mCharacteristics.get(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE);
+                // 自动曝光模式
+                int[] avails = mCharacteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_MODES);
+                // 白平衡mode 列表
+                int[] aa = mCharacteristics.get(CameraCharacteristics.CONTROL_AWB_AVAILABLE_MODES);
+                // 最大白平衡数
+                Integer maxAwb = mCharacteristics.get(CameraCharacteristics.CONTROL_MAX_REGIONS_AWB);
+                //获取曝光时间 范围
+                etr = mCharacteristics.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
 
                 Boolean awbAva = mCharacteristics.get(CameraCharacteristics.CONTROL_AWB_LOCK_AVAILABLE);
-                //获取 awb 模式列表
-                int[] awblock = mCharacteristics.get(CameraCharacteristics.CONTROL_AWB_AVAILABLE_MODES);
-                //获取曝光时间
-                etr = mCharacteristics.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
+
                 if (facing != null && facing != cameraTypeId) {
                     continue;
                 }
 
+                // 获取最大 放大倍数
                 Float maxZoom = mCharacteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM);
                 if (maxZoom != null) {
                     mMaxZoom = maxZoom;
@@ -704,8 +720,8 @@ public class CameraHelper implements ICamera2, AwbSeekBar.OnAwbSeekBarChangeList
             captureBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
             captureBuilder.addTarget(mImageReader.getSurface());
             //设置自动对焦
-            /*captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,
-                    CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);*/
+            captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,
+                    CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
             // Use the same AE and AF modes as the preview.
       /*      if(mNowFlashState != FlashState.CLOSE) {
                 if(mFlashSupported)

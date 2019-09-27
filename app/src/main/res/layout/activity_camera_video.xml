@@ -379,7 +379,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="top"
-                android:max="100000"
+                android:max="8000"
                 android:maxHeight="3dp"
                 android:minHeight="3dp"
                 android:splitTrack="false"
