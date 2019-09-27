@@ -26,7 +26,6 @@ import butterknife.OnClick;
 import camera.cn.cameramaster.R;
 import camera.cn.cameramaster.base.BaseActivity;
 import camera.cn.cameramaster.util.AppConstant;
-import camera.cn.cameramaster.util.LabUtil;
 
 /**
  * 首页
@@ -51,7 +50,7 @@ public class MainActivity extends BaseActivity {
 
     @Override
     protected void initView() {
-        mD65File = new File(getExternalFilesDir(null), "picD65.jpg");
+        mD65File = new File(getExternalFilesDir(""), "picD65.jpg");
         mFile = new File(getExternalFilesDir(null), "pic.jpg");
     }
 
