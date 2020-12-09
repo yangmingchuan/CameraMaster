@@ -1,9 +1,10 @@
 # SunCamera
 
-一个 学习自定义的 Camera1 、Camera2 和 OpenglES 的Demo
+一个 学习自定义的 Camera1 、Camera2 、Camera X 和 OpenglES 的Demo
 
 # 版本迭代
 
+ -  1.3 添加CameraX 界面（需要抽离 单独运行）
  -  1.2 添加 拍照录像及硬件设备信息调节界面
  -  1.1 添加 Camera 2 相机使用界面
  -  1.0 添加 Camera 1 相机使用界面
@@ -31,3 +32,6 @@ https://github.com/chensowf/Camera   录像代码部分参考和学习。感谢�
 5. 相机的 曝光补偿、曝光时间、白平衡、iso 缩放、闪光灯、旋转相机等功能已经完成。详见 GoogleCameraActivity 类
 
 ![image](https://img-blog.csdnimg.cn/2019040210145280.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzI3OTQ4NjU5,size_16,color_FFFFFF,t_70)
+
+
+6. Camera X 代码在 app/camerax 目录下
