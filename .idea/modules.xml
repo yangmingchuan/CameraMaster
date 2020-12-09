@@ -4,9 +4,12 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/CameraMaster.iml" filepath="$PROJECT_DIR$/CameraMaster.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/CameraMaster-app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/CameraMaster-app.iml" group="CameraMaster/app" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/camerax/CameraMaster-camerax.iml" filepath="$PROJECT_DIR$/.idea/modules/camerax/CameraMaster-camerax.iml" group="CameraMaster/camerax" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Downloads-githubwork-CameraMaster.iml" filepath="$PROJECT_DIR$/.idea/modules/Downloads-githubwork-CameraMaster.iml" group="CameraMaster" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/camerax/camerax.iml" filepath="$PROJECT_DIR$/.idea/modules/app/camerax/camerax.iml" group="CameraMaster/app/camerax" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/githubwork-CameraMaster.iml" filepath="$PROJECT_DIR$/.idea/modules/githubwork-CameraMaster.iml" group="CameraMaster" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/githubwork-CameraMaster-app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/githubwork-CameraMaster-app.iml" group="CameraMaster/app" />
     </modules>
   </component>
 </project>

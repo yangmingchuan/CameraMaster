@@ -1,2 +1,2 @@
-include ':app:camerax'
+include ':camerax'
 include ':app'

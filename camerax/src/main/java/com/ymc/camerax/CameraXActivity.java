@@ -29,6 +29,7 @@ import androidx.camera.core.ImageCaptureConfig;
 import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
 import androidx.camera.core.PreviewConfig;
+import androidx.lifecycle.LifecycleOwner;
 
 
 import com.yanzhenjie.permission.Action;
@@ -128,7 +129,7 @@ public class CameraXActivity extends AppCompatActivity {
         ImageAnalysis imageAnalysis = new ImageAnalysis(imageAnalysisConfig);
         imageAnalysis.setAnalyzer(new MyAnalyzer());
 
-        CameraX.bindToLifecycle(this, preview, imageCapture, imageAnalysis);
+        CameraX.bindToLifecycle((LifecycleOwner) this, preview, imageCapture, imageAnalysis);
 
     }
 
