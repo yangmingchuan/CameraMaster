@@ -3,8 +3,8 @@
 一个 学习自定义的 Camera1 、Camera2 、Camera X 和 OpenglES 的Demo
 
 # 版本迭代
-
- -  1.3 添加CameraX 界面（需要抽离 单独运行）
+ 
+ -  1.3 完善部分bug （暂时停止维护）
  -  1.2 添加 拍照录像及硬件设备信息调节界面
  -  1.1 添加 Camera 2 相机使用界面
  -  1.0 添加 Camera 1 相机使用界面
