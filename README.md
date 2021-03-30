@@ -4,7 +4,7 @@
 
 # 版本迭代
  
- -  1.3 完善部分bug （暂时停止维护）
+ -  1.3 完善部分bug （暂时停止维护，抽空整理成底层SDK，相对架构来一次深度的学习）
  -  1.2 添加 拍照录像及硬件设备信息调节界面
  -  1.1 添加 Camera 2 相机使用界面
  -  1.0 添加 Camera 1 相机使用界面
@@ -29,9 +29,5 @@ https://github.com/chensowf/Camera   录像代码部分参考和学习。感谢�
 
 4. camera2 + glSurfaceview  + opengles  博客地址 ： https://www.jianshu.com/p/e4ece3f21ec8
 
-5. 相机的 曝光补偿、曝光时间、白平衡、iso 缩放、闪光灯、旋转相机等功能已经完成。详见 GoogleCameraActivity 类
-
 ![image](https://img-blog.csdnimg.cn/2019040210145280.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzI3OTQ4NjU5,size_16,color_FFFFFF,t_70)
 
-
-6. Camera X 代码在 app/camerax 目录下
